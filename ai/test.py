@@ -1,5 +1,8 @@
 from os import path
 
+import open3d as o3d
+import numpy as np
+
 from colmap import DATA_PATH, parse_images, parse_points
 
 building_id = "test-building"
@@ -27,4 +30,3 @@ points = parse_points(colmap_path)
 
 for point in points:
     print(f"Point: {point}")
-
