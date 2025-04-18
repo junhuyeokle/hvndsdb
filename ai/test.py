@@ -1,6 +1,6 @@
 from os import path
-from colmap.commands import extract_camera_poses, convert
-from colmap.configs import DATA_PATH
+
+from colmap import DATA_PATH, parse_images, parse_points
 
 building_id = "test-building"
 colmap_path = path.join(DATA_PATH, building_id, "colmap")
@@ -18,9 +18,13 @@ print(colmap_path, frames_path, building_id, sep='\n')
 
 # converter(colmap_path)
 
-camera_poses = extract_camera_poses(colmap_path)
+images = parse_images(colmap_path)
 
-
-# 카메라 포즈 출력
-for image_name, pose in camera_poses.items():
+for image_name, pose in images.items():
     print(f"Image {image_name}: Position = {pose['position']}, Rotation = {pose['rotation']}")
+
+points = parse_points(colmap_path)
+
+for point in points:
+    print(f"Point: {point}")
+
