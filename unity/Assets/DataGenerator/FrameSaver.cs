@@ -45,7 +45,7 @@ namespace DataGenerator
         private void OnApplicationQuit()
         {
             Debug.Log("게임 종료 감지됨! ffmpeg 백그라운드 실행 시작.");
-            new Thread(ExportVideo).Start(); // 비동기 처리
+            new Thread(ExportVideo).Start();
         }
 
         private void ExportVideo()

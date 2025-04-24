@@ -12,7 +12,7 @@ namespace Player
 
         private void Start()
         {
-            Cursor.lockState = CursorLockMode.Locked; // 마우스 잠금
+            Cursor.lockState = CursorLockMode.Locked;
         }
 
         private void Update()
@@ -21,10 +21,10 @@ namespace Player
             var mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
             _xRotation -= mouseY;
-            _xRotation = Mathf.Clamp(_xRotation, -90f, 90f); // 위/아래 제한
+            _xRotation = Mathf.Clamp(_xRotation, -90f, 90f);
 
-            transform.localRotation = Quaternion.Euler(_xRotation, 0f, 0f); // 카메라 상하
-            playerBody.Rotate(Vector3.up * mouseX); // 플레이어 좌우
+            transform.localRotation = Quaternion.Euler(_xRotation, 0f, 0f);
+            playerBody.Rotate(Vector3.up * mouseX);
         }
     }
 }

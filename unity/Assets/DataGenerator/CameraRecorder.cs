@@ -18,14 +18,11 @@ namespace DataGenerator
 
         private void Start()
         {
-            // RenderTexture 생성
             _renderTexture = new RenderTexture(width, height, 24);
             _renderTexture.Create();
 
-            // 카메라에 적용
             targetCamera.targetTexture = _renderTexture;
 
-            // 캡처용 텍스처 생성
             _screenShot = new Texture2D(width, height, TextureFormat.RGB24, false);
         }
 
@@ -44,7 +41,6 @@ namespace DataGenerator
 
         private void OnDestroy()
         {
-            // 메모리 정리
             if (_renderTexture != null)
             {
                 _renderTexture.Release();
