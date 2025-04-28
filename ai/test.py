@@ -1,29 +1,27 @@
 from os import path
 
-from colmap import DATA_PATH, parse_images, parse_points
+from colmap import extract, match, pair, convert, reconstruct
+from deblur_gs import train
+
+DATA_PATH = "C:\\Devs\\Repos\\ARMap\\data"
 
 building_id = "test-building"
 colmap_path = path.join(DATA_PATH, building_id, "colmap")
 frames_path = path.join(DATA_PATH, building_id, "frames")
 
 print(colmap_path, frames_path, building_id, sep='\n')
-#
-# extract_features(frames_path, result_path)
-#
-# image_matching(result_path)
-#
-# mapper(frames_path, result_path)
 
-# extract_3d_points_and_6dof(result_path)
+init = False
 
-# converter(colmap_path)
+if init:
+    extract(frames_path, colmap_path)
+    match(colmap_path)
 
-images = parse_images(colmap_path)
+    pair(frames_path, colmap_path)
 
-for image_name, pose in images.items():
-    print(f"Image {image_name}: Position = {pose['position']}, Rotation = {pose['rotation']}")
+convert(colmap_path, "TXT")
+# convert(colmap_path, "PLY")
 
-points = parse_points(colmap_path)
+print(reconstruct(colmap_path, frames_path))
 
-for point in points:
-    print(f"Point: {point}")
+# train(colmap_path)

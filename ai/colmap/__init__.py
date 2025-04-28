@@ -1,2 +1,2 @@
-from .commands import *
+from .colmap import *
 from .configs import *

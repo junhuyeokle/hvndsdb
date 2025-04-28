@@ -2,5 +2,10 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../deblurgs" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../deblurgs/submodule/diff-gaussian-rasterization" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../deblurgs/submodule/diff-gaussian-rasterization/third_party/glm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../deblurgs/submodule/knn" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../deblurgs/submodule/pytorch3d" vcs="Git" />
   </component>
 </project>
