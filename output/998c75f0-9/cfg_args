@@ -1,1 +1,0 @@
-Namespace(bezier_order=7, data_device='cuda', eval=True, images='images', mode='Linear', model_path='./output/998c75f0-9', resolution=-1, sh_degree=3, source_path='C:\\Devs\\Repos\\ARMap\\data\\test-building\\colmap', visdom_port=2333, visdom_server='127.0.0.1', white_background=False)

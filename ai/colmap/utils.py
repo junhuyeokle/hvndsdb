@@ -30,7 +30,8 @@ def command(cmd, n=10, sleep_time=0.0):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         bufsize=1,
-        universal_newlines=True
+        universal_newlines=True,
+        encoding="utf-8"
     )
 
     def stream_output(_stream, _name):

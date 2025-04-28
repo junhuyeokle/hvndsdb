@@ -1,1 +1,1 @@
-COLMAP_PATH = "C:\\Devs\\Repos\\ARMap\\colmap\\bin\\colmap.exe"
+COLMAP_EXE_PATH = "C:\\Devs\\Repos\\ARMap\\colmap\\bin\\colmap.exe"

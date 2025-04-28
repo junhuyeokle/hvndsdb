@@ -1,12 +1,18 @@
-from .configs import DEBLUR_GS_PATH
-from .utils import command
+from .configs import DEBLUR_GS_TRAIN_PATH, DEBLUR_GS_PYTHON_PATH
+from .utils import command, set_dir
 
 
 def deblur_gs(cmd):
-    command("SET DISTUTILS_USE_SDK=1\n" + "conda activate deblur_gs\n" + cmd + "\n" + "conda deactivate")
+    command(f'powershell -Command "conda activate deblur_gs; {cmd}"')
 
 
-def train(result_path):
-    cmd = f"python \"{DEBLUR_GS_PATH}\\train.py\" -s \"{result_path}\" --eval --deblur"
+def train(deblur_gs_path, colmap_path, frames_path):
+    deblur_gs_path = set_dir(deblur_gs_path)
 
-    deblur_gs(cmd)
+    cmd = f"{DEBLUR_GS_PYTHON_PATH} \"{DEBLUR_GS_TRAIN_PATH}\" " \
+          f"-s \"{colmap_path}\" " \
+          f"-m \"{deblur_gs_path}\" " \
+          f"-i \"{frames_path}\" " \
+          f"--deblur"
+
+    print(cmd)
