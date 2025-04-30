@@ -4,12 +4,17 @@ from ai.colmap import extract_features, match_sequential, incremental_mapping
 from ai.deblur_gs import train
 from ai.utils import extract_frames
 
-
-EXTRACT_FRAMES = False
+EXTRACT_FRAMES = True
 EXTRACT_FEATURES = True
 MATCH_SEQUENTIAL = True
 INCREMENTAL_MAPPING = True
 TRAIN = True
+
+# EXTRACT_FRAMES = False
+# EXTRACT_FEATURES = True
+# MATCH_SEQUENTIAL = True
+# INCREMENTAL_MAPPING = True
+# TRAIN = True
 
 # EXTRACT_FRAMES = False
 # EXTRACT_FEATURES = False
