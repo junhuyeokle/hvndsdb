@@ -5,6 +5,28 @@ import sys
 import time
 import os
 import shutil
+import cv2
+
+
+def extract_frames(sample_path, frames_path):
+    cap = cv2.VideoCapture(sample_path)
+    frames_path = init_dir(frames_path)
+
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    num_digits = len(str(total_frames))
+
+    frame_count = 0
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        filename = os.path.join(frames_path, f"{frame_count:0{num_digits}d}.png")
+        cv2.imwrite(filename, frame)
+        frame_count += 1
+
+    cap.release()
 
 
 def init_dir(path):
