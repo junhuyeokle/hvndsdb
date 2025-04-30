@@ -46,9 +46,9 @@ def incremental_mapping(colmap_path, frames_path):
 
     reconstructions = pycolmap.incremental_mapping(database_path, frames_path, sparse_path)
 
-    print(reconstructions)
+    # print(reconstructions)
 
     for index, reconstruction in reconstructions.items():
         print(index, reconstruction)
-        reconstruction.export_PLY(os.path.join(sparse_path, str(index), "points3D.ply"))
-        reconstruction.write_text(init_dir(os.path.join(sparse_path, str(index), "txt")))
+        # reconstruction.export_PLY(os.path.join(sparse_path, str(index), "points3D.ply"))
+        # reconstruction.write_text(init_dir(os.path.join(sparse_path, str(index), "txt")))
