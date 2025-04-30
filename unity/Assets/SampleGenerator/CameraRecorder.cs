@@ -44,17 +44,35 @@ namespace SampleGenerator
             {
                 OutputWidth = 1920,
                 OutputHeight = 1080,
+                CaptureUI = false,
+                FlipFinalOutput = false,
+                CameraTag = "CaptureCamera"
             };
+            
+            var outputFileBase = System.IO.Path.Combine(Config.DataPath, Manager.BuildingId, Config.SampleFileName);
+            var outputFileFull = outputFileBase + ".mp4";
 
-            movieRecorder.OutputFile = System.IO.Path.Combine(Config.DataPath, Manager.BuildingId, Config.SampleFileName);
-
+            if (System.IO.File.Exists(outputFileFull))
+            {
+                try
+                {
+                    System.IO.File.Delete(outputFileFull);
+                    Debug.Log($"[Recorder] 기존 파일 삭제됨: {outputFileFull}");
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[Recorder] 기존 파일 삭제 실패: {e.Message}");
+                }
+            }
+            
+            movieRecorder.OutputFile = outputFileBase;
+            
             controllerSettings.AddRecorderSettings(movieRecorder);
             controllerSettings.SetRecordModeToManual();
             controllerSettings.FrameRate = 30.0f;
 
             _recorderController = new RecorderController(controllerSettings);
         }
-
     }
 }
 #endif

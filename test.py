@@ -25,7 +25,7 @@ TRAIN = True
 
 DATA_PATH = "C:\\Devs\\Repos\\ARMap\\data"
 
-building_id = "test-building"
+building_id = "test-building-1"
 sample_path = os.path.join(DATA_PATH, building_id, "sample.mp4")
 deblur_gs_path = os.path.join(DATA_PATH, building_id, "deblur_gs")
 colmap_path = os.path.join(DATA_PATH, building_id, "colmap")
