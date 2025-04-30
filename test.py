@@ -1,27 +1,15 @@
 import os
 
-from ai.colmap import extract_features, match_sequential, incremental_mapping
+from ai.colmap import extract_features, match_sequential, incremental_mapping, match_exhaustive
 from ai.deblur_gs import train
 from ai.utils import extract_frames
 
-EXTRACT_FRAMES = True
-EXTRACT_FEATURES = True
-MATCH_SEQUENTIAL = True
-INCREMENTAL_MAPPING = True
+EXTRACT_FRAMES = False
+EXTRACT_FEATURES = False
+MATCH_SEQUENTIAL = False
+MATCH_EXHAUSTIVE = False
+INCREMENTAL_MAPPING = False
 TRAIN = True
-
-# EXTRACT_FRAMES = False
-# EXTRACT_FEATURES = True
-# MATCH_SEQUENTIAL = True
-# INCREMENTAL_MAPPING = True
-# TRAIN = True
-
-# EXTRACT_FRAMES = False
-# EXTRACT_FEATURES = False
-# MATCH_SEQUENTIAL = False
-# INCREMENTAL_MAPPING = False
-# TRAIN = True
-
 
 DATA_PATH = "C:\\Devs\\Repos\\ARMap\\data"
 
@@ -40,7 +28,10 @@ if EXTRACT_FEATURES:
     extract_features(colmap_path, frames_path)
 
 if MATCH_SEQUENTIAL:
-    match_sequential(colmap_path)
+    match_sequential(colmap_path, overlap=10)
+
+if MATCH_EXHAUSTIVE:
+    match_exhaustive(colmap_path)
 
 if INCREMENTAL_MAPPING:
     incremental_mapping(colmap_path, frames_path)

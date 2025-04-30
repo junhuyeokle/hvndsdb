@@ -13,18 +13,25 @@ def extract_frames(sample_path, frames_path):
     frames_path = init_dir(frames_path)
 
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    num_digits = len(str(total_frames))
+    source_fps = cap.get(cv2.CAP_PROP_FPS) or 30
+    frame_interval = max(int(source_fps // 5), 1)
 
-    frame_count = 0
+    num_digits = len(str(total_frames))
+    read_frame_count = 0
+    saved_frame_count = 0
 
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
 
-        filename = os.path.join(frames_path, f"{frame_count:0{num_digits}d}.png")
-        cv2.imwrite(filename, frame)
-        frame_count += 1
+        if read_frame_count % frame_interval == 0:
+            frame = cv2.resize(frame, (960, 540), interpolation=cv2.INTER_AREA)
+            filename = os.path.join(frames_path, f"{saved_frame_count:0{num_digits}d}.png")
+            cv2.imwrite(filename, frame)
+            saved_frame_count += 1
+
+        read_frame_count += 1
 
     cap.release()
 
