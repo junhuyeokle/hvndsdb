@@ -31,9 +31,11 @@ import sys
 def render_with_optim_cam(view, gaussians, pipeline, background):
     gt_image = view.test_image.cuda()
     pose = torch.nn.Parameter(
-        (torch.zeros_like(view.gaussian_trans)).cuda().requires_grad_(True))
-    optimizer = torch.optim.Adam([{'params': [pose],
-                                  'lr': 1e-3, "name": "camera pose refine"}])
+        (torch.zeros_like(view.gaussian_trans)).cuda().requires_grad_(True)
+    )
+    optimizer = torch.optim.Adam(
+        [{"params": [pose], "lr": 1e-3, "name": "camera pose refine"}]
+    )
     for iter in range(1400):
         # view.pose = Pose().compose([Lie().se3_to_SE3(pose), view.pose_gt])
         view.gaussian_trans = pose
@@ -42,8 +44,7 @@ def render_with_optim_cam(view, gaussians, pipeline, background):
         loss.backward()
         optimizer.step()
         optimizer.zero_grad(set_to_none=True)
-        print(
-            f"{iter} loss={loss:03f}", end='\r')
+        print(f"{iter} loss={loss:03f}", end="\r")
 
     view.gaussian_trans = pose
     # view.pose = Pose().compose(Lie().se3_to_SE3(pose), view.pose_gt)
@@ -57,15 +58,26 @@ def render_with_optim_cam(view, gaussians, pipeline, background):
     return rgb, visualize_depth(depth)
 
 
-def render_set(model_path, name, iteration, views, gaussians, pipeline, background, optim_pose):
+def render_set(
+    model_path,
+    name,
+    iteration,
+    views,
+    gaussians,
+    pipeline,
+    background,
+    optim_pose,
+):
     render_path = os.path.join(
-        model_path, name, "ours_{}".format(iteration), "renders")
-    gts_path = os.path.join(
-        model_path, name, "ours_{}".format(iteration), "gt")
+        model_path, name, "ours_{}".format(iteration), "renders"
+    )
+    gts_path = os.path.join(model_path, name, "ours_{}".format(iteration), "gt")
     refs_path = os.path.join(
-        model_path, name, "ours_{}".format(iteration), "ref")
+        model_path, name, "ours_{}".format(iteration), "ref"
+    )
     depth_path = os.path.join(
-        model_path, name, "ours_{}".format(iteration), "depth")
+        model_path, name, "ours_{}".format(iteration), "depth"
+    )
 
     makedirs(render_path, exist_ok=True)
     makedirs(gts_path, exist_ok=True)
@@ -79,36 +91,63 @@ def render_set(model_path, name, iteration, views, gaussians, pipeline, backgrou
             depth = result["depth"]
         else:
             rgb, depth = render_with_optim_cam(
-                view, gaussians, pipeline, background)
+                view, gaussians, pipeline, background
+            )
         ref = view.original_image[0:3, :, :]
         gt = view.test_image[0:3, :, :]
-        torchvision.utils.save_image(rgb, os.path.join(
-            render_path, '{0:05d}'.format(idx) + ".png"))
-        torchvision.utils.save_image(ref, os.path.join(
-            refs_path, '{0:05d}'.format(idx) + ".png"))
-        torchvision.utils.save_image(gt, os.path.join(
-            gts_path, '{0:05d}'.format(idx) + ".png"))
-        torchvision.utils.save_image(depth, os.path.join(
-            depth_path, '{0:05d}'.format(idx) + ".png"))
+        torchvision.utils.save_image(
+            rgb, os.path.join(render_path, "{0:05d}".format(idx) + ".png")
+        )
+        torchvision.utils.save_image(
+            ref, os.path.join(refs_path, "{0:05d}".format(idx) + ".png")
+        )
+        torchvision.utils.save_image(
+            gt, os.path.join(gts_path, "{0:05d}".format(idx) + ".png")
+        )
+        torchvision.utils.save_image(
+            depth, os.path.join(depth_path, "{0:05d}".format(idx) + ".png")
+        )
 
 
-def render_sets(dataset: ModelParams, iteration: int, pipeline: PipelineParams, skip_train: bool, skip_test: bool, optim_pose: bool):
+def render_sets(
+    dataset: ModelParams,
+    iteration: int,
+    pipeline: PipelineParams,
+    skip_train: bool,
+    skip_test: bool,
+    optim_pose: bool,
+):
     # with True:
     # with torch.no_grad():
     gaussians = GaussianModel(dataset.sh_degree)
-    scene = Scene(dataset, gaussians,
-                  load_iteration=iteration, shuffle=False)
+    scene = Scene(dataset, gaussians, load_iteration=iteration, shuffle=False)
 
     bg_color = [1, 1, 1] if dataset.white_background else [0, 0, 0]
     background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
 
     if not skip_train:
-        render_set(dataset.model_path, "train", scene.loaded_iter,
-                   scene.getTrainCameras(), gaussians, pipeline, background, optim_pose)
+        render_set(
+            dataset.model_path,
+            "train",
+            scene.loaded_iter,
+            scene.getTrainCameras(),
+            gaussians,
+            pipeline,
+            background,
+            optim_pose,
+        )
 
     if not skip_test:
-        render_set(dataset.model_path, "test", scene.loaded_iter,
-                   scene.getTestCameras(), gaussians, pipeline, background, optim_pose)
+        render_set(
+            dataset.model_path,
+            "test",
+            scene.loaded_iter,
+            scene.getTestCameras(),
+            gaussians,
+            pipeline,
+            background,
+            optim_pose,
+        )
 
 
 if __name__ == "__main__":
@@ -128,5 +167,11 @@ if __name__ == "__main__":
     # Initialize system state (RNG)
     safe_state(args.quiet, args.device)
 
-    render_sets(model.extract(args), args.iteration,
-                pipeline.extract(args), args.skip_train, args.skip_test, args.optim_pose)
+    render_sets(
+        model.extract(args),
+        args.iteration,
+        pipeline.extract(args),
+        args.skip_train,
+        args.skip_test,
+        args.optim_pose,
+    )

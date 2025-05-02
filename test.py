@@ -10,8 +10,8 @@ from ai.colmap import (
 from ai.deblur_gs import train
 from ai.utils import extract_frames
 
-EXTRACT_FRAMES = True
-EXTRACT_FEATURES = True
+EXTRACT_FRAMES = False
+EXTRACT_FEATURES = False
 MATCH_HYBRID = False
 MATCH_SEQUENTIAL = True
 MATCH_EXHAUSTIVE = False
@@ -40,7 +40,7 @@ if EXTRACT_FEATURES:
     extract_features(colmap_path, frames_path)
 
 if MATCH_SEQUENTIAL:
-    match_sequential(colmap_path, overlap=100)
+    match_sequential(colmap_path, overlap=500)
 
 if MATCH_EXHAUSTIVE:
     match_exhaustive(colmap_path)

@@ -48,37 +48,45 @@ def get_novel_view_poses(pose_anchor, N=60, scale=1):
 
 
 def render_video(model_path, iteration, scene, gaussians, pipeline, background):
-    render_path = os.path.join(
-        model_path, "novel_view", "rgb")
-    depth_path = os.path.join(
-        model_path, "novel_view", "depth")
+    render_path = os.path.join(model_path, "novel_view", "rgb")
+    depth_path = os.path.join(model_path, "novel_view", "depth")
     makedirs(render_path, exist_ok=True)
     makedirs(depth_path, exist_ok=True)
     train_cameras = scene.getTrainCameras()
     train_pose = torch.stack([cam.pose_gt for cam in train_cameras])
-    idx_center = (train_pose-train_pose.mean(dim=0, keepdim=True)
-                  )[..., 3].norm(dim=-1).argmin()
+    idx_center = (
+        (train_pose - train_pose.mean(dim=0, keepdim=True))[..., 3]
+        .norm(dim=-1)
+        .argmin()
+    )
     pose_novel = get_novel_view_poses(
-        train_pose[idx_center], N=120, scale=1).cuda()
+        train_pose[idx_center], N=120, scale=1
+    ).cuda()
     view = train_cameras[0]
     for idx, pose in enumerate(pose_novel):
         view.pose = pose
         result = render(view, gaussians, pipeline, background)
-        torchvision.utils.save_image(result["render"], os.path.join(
-            render_path, '{0:05d}'.format(idx) + ".png"))
-        torchvision.utils.save_image(visualize_depth(result["depth"]), os.path.join(
-            depth_path, '{0:05d}'.format(idx) + ".png"))
+        torchvision.utils.save_image(
+            result["render"],
+            os.path.join(render_path, "{0:05d}".format(idx) + ".png"),
+        )
+        torchvision.utils.save_image(
+            visualize_depth(result["depth"]),
+            os.path.join(depth_path, "{0:05d}".format(idx) + ".png"),
+        )
+
 
 def render_sets(dataset: ModelParams, iteration: int, pipeline: PipelineParams):
     gaussians = GaussianModel(dataset.sh_degree)
-    scene = Scene(dataset, gaussians,
-                  load_iteration=iteration, shuffle=False)
+    scene = Scene(dataset, gaussians, load_iteration=iteration, shuffle=False)
 
     bg_color = [1, 1, 1] if dataset.white_background else [0, 0, 0]
     background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
 
-    render_video(dataset.model_path, iteration, scene,
-                 gaussians, pipeline, background)
+    render_video(
+        dataset.model_path, iteration, scene, gaussians, pipeline, background
+    )
+
 
 if __name__ == "__main__":
     # Set up command line argument parser
@@ -94,5 +102,4 @@ if __name__ == "__main__":
     # Initialize system state (RNG)
     safe_state(args.quiet, args.device)
 
-    render_sets(model.extract(args), args.iteration,
-                pipeline.extract(args))
+    render_sets(model.extract(args), args.iteration, pipeline.extract(args))

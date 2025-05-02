@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33b71fae31e6c7d438e8566dc713e666, type: 3}
+  m_Name: deblur_gs-point_cloud-iteration_2000-point_cloud
+  m_EditorClassIdentifier: 
+  m_FormatVersion: 20231020
+  m_SplatCount: 2682
+  m_BoundsMin: {x: -216.42764, y: -85.84353, z: -3.6100488}
+  m_BoundsMax: {x: 118.60391, y: 403.85602, z: 426.3714}
+  m_DataHash:
+    serializedVersion: 2
+    Hash: 75b7588b80b7ce97ca342ab73bc8b53c
+  m_PosFormat: 0
+  m_ScaleFormat: 0
+  m_SHFormat: 0
+  m_ColorFormat: 0
+  m_PosData: {fileID: 4900000, guid: 1170017ff6e5f1c4e8ccd84f4689d4fd, type: 3}
+  m_ColorData: {fileID: 4900000, guid: a1221f1fec883434f85eb033287b9d03, type: 3}
+  m_OtherData: {fileID: 4900000, guid: 87b6fe27364b5e64f994b49ac6e2d332, type: 3}
+  m_SHData: {fileID: 4900000, guid: 682672d6c53efc24c8fb698c0976b0cc, type: 3}
+  m_ChunkData: {fileID: 0}
+  m_Cameras: []
