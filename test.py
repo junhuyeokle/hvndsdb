@@ -1,8 +1,12 @@
 import os
 
-import pycolmap
-
-from ai.colmap import extract_features, match_sequential, incremental_mapping, match_exhaustive, match_hybrid
+from ai.colmap import (
+    extract_features,
+    match_sequential,
+    incremental_mapping,
+    match_exhaustive,
+    match_hybrid,
+)
 from ai.deblur_gs import train
 from ai.utils import extract_frames
 
@@ -27,7 +31,7 @@ deblur_gs_path = os.path.join(DATA_PATH, building_id, "deblur_gs")
 colmap_path = os.path.join(DATA_PATH, building_id, "colmap")
 frames_path = os.path.join(DATA_PATH, building_id, "frames")
 
-print(sample_path, colmap_path, frames_path, building_id, sep='\n')
+print(sample_path, colmap_path, frames_path, building_id, sep="\n")
 
 if EXTRACT_FRAMES:
     extract_frames(sample_path, frames_path)
