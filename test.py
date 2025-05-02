@@ -40,7 +40,7 @@ if EXTRACT_FEATURES:
     extract_features(colmap_path, frames_path)
 
 if MATCH_SEQUENTIAL:
-    match_sequential(colmap_path)
+    match_sequential(colmap_path, overlap=100)
 
 if MATCH_EXHAUSTIVE:
     match_exhaustive(colmap_path)

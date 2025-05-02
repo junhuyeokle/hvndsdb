@@ -30,7 +30,9 @@ def match_sequential(colmap_path, overlap=10, device=pycolmap.Device.auto):
     matching_options.overlap = overlap
 
     pycolmap.match_sequential(
-        database_path=database_path, matching_options=matching_options, device=device
+        database_path=database_path,
+        matching_options=matching_options,
+        device=device,
     )
 
 
@@ -40,12 +42,19 @@ def match_exhaustive(colmap_path, block_size=100, device=pycolmap.Device.auto):
     matching_options = pycolmap.ExhaustiveMatchingOptions()
     matching_options.block_size = block_size
 
-    pycolmap.match_exhaustive(
-        database_path=database_path, matching_options=matching_options, device=device
-    )
+    try:
+        pycolmap.match_exhaustive(
+            database_path=database_path,
+            matching_options=matching_options,
+            device=device,
+        )
+    except Exception as e:
+        print(f"{e}")
 
 
-def match_hybrid(colmap_path, overlap=10, block_size=100, device=pycolmap.Device.auto):
+def match_hybrid(
+    colmap_path, overlap=10, block_size=100, device=pycolmap.Device.auto
+):
     match_sequential(colmap_path, overlap)
     match_exhaustive(colmap_path, block_size, device)
 
@@ -55,12 +64,13 @@ def incremental_mapping(colmap_path, frames_path):
     database_path = os.path.join(colmap_path, "database.db")
 
     reconstructions = pycolmap.incremental_mapping(
-        database_path=database_path, image_path=frames_path, output_path=sparse_path
+        database_path=database_path,
+        image_path=frames_path,
+        output_path=sparse_path,
     )
 
-    # print(reconstructions)
-
     for index, reconstruction in reconstructions.items():
+        reconstruction.write_text(
+            init_dir(os.path.join(sparse_path, str(index), "txts"))
+        )
         print(index, reconstruction)
-        # reconstruction.export_PLY(os.path.join(sparse_path, str(index), "points3D.ply"))
-        # reconstruction.write_text(init_dir(os.path.join(sparse_path, str(index), "txt")))
