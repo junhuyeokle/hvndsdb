@@ -10,18 +10,18 @@ def extract_features(colmap_path, frames_path):
     database_path = os.path.join(colmap_path, "database.db")
 
     options = pycolmap.ImageReaderOptions()
-    options.camera_model = 'PINHOLE'
+    options.camera_model = 'SIMPLE_PINHOLE'
 
     pycolmap.extract_features(device=pycolmap.Device.auto,
                               database_path=database_path,
                               image_path=frames_path,
                               camera_mode=pycolmap.CameraMode.SINGLE,
-                              camera_model='PINHOLE',
+                              camera_model='SIMPLE_PINHOLE',
                               reader_options=options,
                               image_list=[])
 
 
-def match_sequential(colmap_path, overlap=20):
+def match_sequential(colmap_path, overlap=10, device=pycolmap.Device.auto):
     database_path = os.path.join(colmap_path, "database.db")
 
     matching_options = pycolmap.SequentialMatchingOptions()
@@ -29,14 +29,23 @@ def match_sequential(colmap_path, overlap=20):
 
     pycolmap.match_sequential(database_path=database_path,
                               matching_options=matching_options,
-                              device=pycolmap.Device.auto)
+                              device=device)
 
 
-def match_exhaustive(colmap_path):
+def match_exhaustive(colmap_path, block_size = 100, device=pycolmap.Device.auto):
     database_path = os.path.join(colmap_path, "database.db")
 
+    matching_options = pycolmap.ExhaustiveMatchingOptions()
+    matching_options.block_size = block_size
+
     pycolmap.match_exhaustive(database_path=database_path,
-                              device=pycolmap.Device.auto)
+                              matching_options=matching_options,
+                              device=device)
+    
+
+def match_hybrid(colmap_path, overlap=10, block_size = 100, device=pycolmap.Device.auto):
+    match_sequential(colmap_path, overlap)
+    match_exhaustive(colmap_path, block_size, device)
 
 
 def incremental_mapping(colmap_path, frames_path):

@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="ai" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="ar_map_ai" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="hvndsdb" project-jdk-type="Python SDK" />
 </project>

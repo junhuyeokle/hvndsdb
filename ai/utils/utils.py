@@ -8,13 +8,13 @@ import shutil
 import cv2
 
 
-def extract_frames(sample_path, frames_path):
+def extract_frames(sample_path, frames_path, frames_per_second=5, width=600, height=400):
     cap = cv2.VideoCapture(sample_path)
     frames_path = init_dir(frames_path)
 
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     source_fps = cap.get(cv2.CAP_PROP_FPS) or 30
-    frame_interval = max(int(source_fps // 5), 1)
+    frame_interval = max(int(source_fps // frames_per_second), 1)
 
     num_digits = len(str(total_frames))
     read_frame_count = 0
@@ -26,7 +26,7 @@ def extract_frames(sample_path, frames_path):
             break
 
         if read_frame_count % frame_interval == 0:
-            frame = cv2.resize(frame, (960, 540), interpolation=cv2.INTER_AREA)
+            frame = cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
             filename = os.path.join(frames_path, f"{saved_frame_count:0{num_digits}d}.png")
             cv2.imwrite(filename, frame)
             saved_frame_count += 1
