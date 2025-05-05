@@ -10,8 +10,8 @@ from ai.colmap import (
 from ai.deblur_gs import train
 from ai.utils import extract_frames
 
-EXTRACT_FRAMES = False
-EXTRACT_FEATURES = False
+EXTRACT_FRAMES = True
+EXTRACT_FEATURES = True
 MATCH_HYBRID = False
 MATCH_SEQUENTIAL = True
 MATCH_EXHAUSTIVE = False
