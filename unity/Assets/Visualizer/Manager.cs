@@ -1,7 +1,7 @@
 using GaussianSplatting.Runtime;
 using UnityEngine;
 
-namespace Vision
+namespace Visualizer
 {
     public class Manager : MonoBehaviour
     {

@@ -10,46 +10,75 @@ from ai.colmap import (
 from ai.deblur_gs import train
 from ai.utils import extract_frames
 
-EXTRACT_FRAMES = True
-EXTRACT_FEATURES = True
-MATCH_HYBRID = False
-MATCH_SEQUENTIAL = True
-MATCH_EXHAUSTIVE = False
-INCREMENTAL_MAPPING = True
-TRAIN = True
 
-# DO NOT CHANGE FROM BOTTOM OF THIS LINE
+class Config:
+    DATA_PATH = "C:\\Devs\\Repos\\HVNDSDB\\data"
 
-MATCH_SEQUENTIAL = False if MATCH_HYBRID else MATCH_SEQUENTIAL
-MATCH_EXHAUSTIVE = False if MATCH_HYBRID else MATCH_EXHAUSTIVE
+    def __init__(
+        self,
+        building_id,
+        EXTRACT_FRAMES=True,
+        EXTRACT_FEATURES=True,
+        MATCH_HYBRID=False,
+        MATCH_SEQUENTIAL=True,
+        MATCH_EXHAUSTIVE=False,
+        INCREMENTAL_MAPPING=True,
+        TRAIN=True,
+    ):
+        self.sample_path = os.path.join(
+            Config.DATA_PATH, building_id, "sample.mp4"
+        )
+        self.deblur_gs_path = os.path.join(
+            Config.DATA_PATH, building_id, "deblur_gs"
+        )
+        self.colmap_path = os.path.join(Config.DATA_PATH, building_id, "colmap")
+        self.frames_path = os.path.join(Config.DATA_PATH, building_id, "frames")
 
-DATA_PATH = "C:\\Devs\\Repos\\HVNDSDB\\data"
+        self.EXTRACT_FRAMES = EXTRACT_FRAMES
+        self.EXTRACT_FEATURES = EXTRACT_FEATURES
+        self.MATCH_HYBRID = MATCH_HYBRID
+        self.MATCH_SEQUENTIAL = MATCH_SEQUENTIAL
+        self.MATCH_EXHAUSTIVE = MATCH_EXHAUSTIVE
+        self.INCREMENTAL_MAPPING = INCREMENTAL_MAPPING
+        self.TRAIN = TRAIN
+
+        self.MATCH_SEQUENTIAL = (
+            False if self.MATCH_HYBRID else self.MATCH_SEQUENTIAL
+        )
+        self.MATCH_EXHAUSTIVE = (
+            False if self.MATCH_HYBRID else self.MATCH_EXHAUSTIVE
+        )
+
 
 building_id = "test-building-1"
-sample_path = os.path.join(DATA_PATH, building_id, "sample.mp4")
-deblur_gs_path = os.path.join(DATA_PATH, building_id, "deblur_gs")
-colmap_path = os.path.join(DATA_PATH, building_id, "colmap")
-frames_path = os.path.join(DATA_PATH, building_id, "frames")
 
-print(sample_path, colmap_path, frames_path, building_id, sep="\n")
+config = Config(building_id)
 
-if EXTRACT_FRAMES:
-    extract_frames(sample_path, frames_path)
+print(
+    config.sample_path,
+    config.colmap_path,
+    config.frames_path,
+    building_id,
+    sep="\n",
+)
 
-if EXTRACT_FEATURES:
-    extract_features(colmap_path, frames_path)
+if config.EXTRACT_FRAMES:
+    extract_frames(config.sample_path, config.frames_path)
 
-if MATCH_SEQUENTIAL:
-    match_sequential(colmap_path, overlap=500)
+if config.EXTRACT_FEATURES:
+    extract_features(config.colmap_path, config.frames_path)
 
-if MATCH_EXHAUSTIVE:
-    match_exhaustive(colmap_path)
+if config.MATCH_SEQUENTIAL:
+    match_sequential(config.colmap_path, overlap=500)
 
-if MATCH_HYBRID:
-    match_hybrid(colmap_path)
+if config.MATCH_EXHAUSTIVE:
+    match_exhaustive(config.colmap_path)
 
-if INCREMENTAL_MAPPING:
-    incremental_mapping(colmap_path, frames_path)
+if config.MATCH_HYBRID:
+    match_hybrid(config.colmap_path)
 
-if TRAIN:
-    train(deblur_gs_path, colmap_path, frames_path)
+if config.INCREMENTAL_MAPPING:
+    incremental_mapping(config.colmap_path, config.frames_path)
+
+if config.TRAIN:
+    train(config.deblur_gs_path, config.colmap_path, config.frames_path)

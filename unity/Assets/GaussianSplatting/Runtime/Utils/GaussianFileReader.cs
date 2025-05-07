@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using GaussianSplatting.Runtime;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -11,7 +10,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace GaussianSplatting.Editor.Utils
+namespace GaussianSplatting.Runtime.Utils
 {
     // input file splat data is read into this format
     public struct InputSplatData
@@ -35,9 +34,9 @@ namespace GaussianSplatting.Editor.Utils
             if (File.Exists(filePath))
             {
                 if (isPLY(filePath))
-                    PLYFileReader.ReadFileHeader(filePath, out vertexCount, out _, out _);
+                    PlyFileReader.ReadFileHeader(filePath, out vertexCount, out _, out _);
                 else if (isSPZ(filePath))
-                    SPZFileReader.ReadFileHeader(filePath, out vertexCount);
+                    SpzFileReader.ReadFileHeader(filePath, out vertexCount);
             }
             return vertexCount;
         }
@@ -47,8 +46,8 @@ namespace GaussianSplatting.Editor.Utils
             if (isPLY(filePath))
             {
                 NativeArray<byte> plyRawData;
-                List<(string, PLYFileReader.ElementType)> attributes;
-                PLYFileReader.ReadFile(filePath, out var splatCount, out var vertexStride, out attributes, out plyRawData);
+                List<(string, PlyFileReader.ElementType)> attributes;
+                PlyFileReader.ReadFile(filePath, out var splatCount, out var vertexStride, out attributes, out plyRawData);
                 string attrError = CheckPLYAttributes(attributes);
                 if (!string.IsNullOrEmpty(attrError))
                     throw new IOException($"PLY file is probably not a Gaussian Splat file? Missing properties: {attrError}");
@@ -59,7 +58,7 @@ namespace GaussianSplatting.Editor.Utils
             }
             if (isSPZ(filePath))
             {
-                SPZFileReader.ReadFile(filePath, out splats);
+                SpzFileReader.ReadFile(filePath, out splats);
                 return;
             }
             throw new IOException($"File {filePath} is not a supported format");
@@ -68,16 +67,16 @@ namespace GaussianSplatting.Editor.Utils
         static bool isPLY(string filePath) => filePath.EndsWith(".ply", true, CultureInfo.InvariantCulture);
         static bool isSPZ(string filePath) => filePath.EndsWith(".spz", true, CultureInfo.InvariantCulture);
 
-        static string CheckPLYAttributes(List<(string, PLYFileReader.ElementType)> attributes)
+        static string CheckPLYAttributes(List<(string, PlyFileReader.ElementType)> attributes)
         {
             string[] required = { "x", "y", "z", "f_dc_0", "f_dc_1", "f_dc_2", "opacity", "scale_0", "scale_1", "scale_2", "rot_0", "rot_1", "rot_2", "rot_3" };
-            List<string> missing = required.Where(req => !attributes.Contains((req, PLYFileReader.ElementType.Float))).ToList();
+            List<string> missing = required.Where(req => !attributes.Contains((req, PlyFileReader.ElementType.Float))).ToList();
             if (missing.Count == 0)
                 return null;
             return string.Join(",", missing);
         }
 
-        static unsafe NativeArray<InputSplatData> PLYDataToSplats(NativeArray<byte> input, int count, int stride, List<(string, PLYFileReader.ElementType)> attributes)
+        static unsafe NativeArray<InputSplatData> PLYDataToSplats(NativeArray<byte> input, int count, int stride, List<(string, PlyFileReader.ElementType)> attributes)
         {
             NativeArray<int> fileAttrOffsets = new NativeArray<int>(attributes.Count, Allocator.Temp);
             int offset = 0;
@@ -85,7 +84,7 @@ namespace GaussianSplatting.Editor.Utils
             {
                 var attr = attributes[ai];
                 fileAttrOffsets[ai] = offset;
-                offset += PLYFileReader.TypeToSize(attr.Item2);
+                offset += PlyFileReader.TypeToSize(attr.Item2);
             }
 
             string[] splatAttributes =
@@ -157,7 +156,7 @@ namespace GaussianSplatting.Editor.Utils
             NativeArray<int> srcOffsets = new NativeArray<int>(splatAttributes.Length, Allocator.Temp);
             for (int ai = 0; ai < splatAttributes.Length; ai++)
             {
-                int attrIndex = attributes.IndexOf((splatAttributes[ai], PLYFileReader.ElementType.Float));
+                int attrIndex = attributes.IndexOf((splatAttributes[ai], PlyFileReader.ElementType.Float));
                 int attrOffset = attrIndex >= 0 ? fileAttrOffsets[attrIndex] : -1;
                 srcOffsets[ai] = attrOffset;
             }
