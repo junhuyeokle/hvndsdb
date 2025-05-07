@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using Settings;
 using UnityEditor.Recorder;
 using UnityEditor.Recorder.Encoder;
 using UnityEditor.Recorder.Input;
