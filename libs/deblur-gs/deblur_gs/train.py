@@ -12,20 +12,20 @@
 import os
 import torch
 from random import randint
-from utils.loss_utils import l1_loss, ssim, compute_depth_loss
-from utils.vis_utils import vis_cameras
-from utils import depth_utils
+from .utils.loss_utils import l1_loss, ssim, compute_depth_loss
+from .utils.vis_utils import vis_cameras
+from .utils import depth_utils
 from torchmetrics.functional.regression import pearson_corrcoef
-from gaussian_renderer import render, network_gui
+from .gaussian_renderer import render, network_gui
 import sys
-from scene import Scene, GaussianModel
-from utils.general_utils import safe_state, visualize_depth, check_socket_open
+from .scene import Scene, GaussianModel
+from .utils.general_utils import safe_state, visualize_depth, check_socket_open
 import uuid
 from tqdm import tqdm
-from utils.image_utils import psnr
+from .utils.image_utils import psnr
 from argparse import ArgumentParser, Namespace
-from arguments import ModelParams, PipelineParams, OptimizationParams
-from scene.cameras import (
+from .arguments import ModelParams, PipelineParams, OptimizationParams
+from .scene.cameras import (
     Lie,
     evaluate_camera_alignment,
     prealign_cameras,
@@ -33,7 +33,7 @@ from scene.cameras import (
 )
 from torchmetrics import PearsonCorrCoef
 from torchmetrics.functional.regression import pearson_corrcoef
-from lpipsPyTorch import lpips
+from .lpipsPyTorch import lpips
 import visdom
 
 try:
@@ -601,8 +601,10 @@ def training_report(
         torch.cuda.empty_cache()
 
 
-if __name__ == "__main__":
-    # Set up command line argument parser
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+
     parser = ArgumentParser(description="Training script parameters")
     lp = ModelParams(parser)
     op = OptimizationParams(parser)
@@ -612,36 +614,24 @@ if __name__ == "__main__":
     parser.add_argument("--debug_from", type=int, default=-1)
     parser.add_argument("--detect_anomaly", action="store_true", default=False)
     parser.add_argument(
-        "--test_iterations",
-        nargs="+",
-        type=int,
-        default=list(range(1000, 90_000, 1000)),
+        "--test_iterations", nargs="+", type=int, default=list(range(1000, 90_000, 1000))
     )
     parser.add_argument(
-        "--save_iterations",
-        nargs="+",
-        type=int,
-        default=list(range(1000, 90_000, 1000)),
+        "--save_iterations", nargs="+", type=int, default=list(range(1000, 90_000, 1000))
     )
     parser.add_argument("--quiet", action="store_true")
-    parser.add_argument(
-        "--checkpoint_iterations", nargs="+", type=int, default=[]
-    )
+    parser.add_argument("--checkpoint_iterations", nargs="+", type=int, default=[])
     parser.add_argument("--start_checkpoint", type=str, default=None)
     parser.add_argument("--device", type=str, default="cuda:0")
-    args = parser.parse_args(sys.argv[1:])
-    args.save_iterations.append(args.iterations)
+    args = parser.parse_args(argv)
 
+    args.save_iterations.append(args.iterations)
     print("Optimizing " + args.model_path)
 
-    # Initialize system state (RNG)
     safe_state(args.quiet, args.device)
-
-    print(torch.cuda.current_device())
-
-    # Start GUI server, configure and run training
     network_gui.init(args.ip, args.port)
     torch.autograd.set_detect_anomaly(args.detect_anomaly)
+
     training(
         lp.extract(args),
         op.extract(args),
@@ -652,6 +642,8 @@ if __name__ == "__main__":
         args.start_checkpoint,
         args.debug_from,
     )
-
-    # All done
     print("\nTraining complete.")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,5 @@
 import torch
-from scene.cameras import cam2world
+from ..scene.cameras import cam2world
 import matplotlib.pyplot as plt
 from easydict import EasyDict as edict
 import numpy as np

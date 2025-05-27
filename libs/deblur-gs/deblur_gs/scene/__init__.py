@@ -12,16 +12,16 @@
 import os
 import random
 import json
-from utils.system_utils import searchForMaxIteration, mkdir_p
-from scene.dataset_readers import sceneLoadTypeCallbacks
-from scene.gaussian_model import GaussianModel
-from arguments import ModelParams
-from utils.camera_utils import cameraList_from_camInfos, camera_to_JSON
-from scene.cameras import Pose, world2cam, cam2img
+from ..utils.system_utils import searchForMaxIteration, mkdir_p
+from .dataset_readers import sceneLoadTypeCallbacks
+from .gaussian_model import GaussianModel
+from ..arguments import ModelParams
+from ..utils.camera_utils import cameraList_from_camInfos, camera_to_JSON
+from .cameras import Pose, world2cam, cam2img
 import torch.nn.functional as torch_F
 import torch
 import numpy as np
-from utils.general_utils import visualize_depth
+from ..utils.general_utils import visualize_depth
 import torchvision
 from plyfile import PlyData, PlyElement
 

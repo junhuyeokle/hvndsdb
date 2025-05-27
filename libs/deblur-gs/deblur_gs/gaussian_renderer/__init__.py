@@ -12,15 +12,15 @@
 import torch
 import math
 from diff_gaussian_rasterization import GaussianRasterizationSettings, GaussianRasterizer
-from scene.cameras import align_cameras
-from scene.gaussian_model import GaussianModel
-from utils.sh_utils import eval_sh
-from utils.pose_utils import Quaternion, Lie, interpolation_linear, interpolation_spline
+from ..scene.cameras import align_cameras
+from ..scene.gaussian_model import GaussianModel
+from ..utils.sh_utils import eval_sh
+from ..utils.pose_utils import Quaternion, Lie, interpolation_linear, interpolation_spline
 
 
 def render(viewpoint_camera, pc: GaussianModel, pipe, bg_color: torch.Tensor, scaling_modifier=1.0, override_color=None, mode="train", interp_alpha=0.0):
     """
-    Render the scene. 
+    Render the scene.
 
     Background tensor (bg_color) must be on GPU!
     """

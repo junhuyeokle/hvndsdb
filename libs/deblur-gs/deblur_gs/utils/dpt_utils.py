@@ -11,8 +11,8 @@ import argparse
 import numpy as np
 
 from torchvision.transforms import Compose
-from utils.midas.dpt_depth import DPTDepthModel
-from utils.midas.transforms import Resize, NormalizeImage, PrepareForNet
+from .midas.dpt_depth import DPTDepthModel
+from .midas.transforms import Resize, NormalizeImage, PrepareForNet
 
 
 def read_image(path):

@@ -10,21 +10,21 @@
 #
 
 import torch
-from scene import Scene
+from .scene import Scene
 import os
 from tqdm import tqdm
 from os import makedirs
-from gaussian_renderer import render
+from .gaussian_renderer import render
 import torchvision
-from utils.general_utils import safe_state, visualize_depth
+from .utils.general_utils import safe_state, visualize_depth
 from argparse import ArgumentParser
-from arguments import ModelParams, PipelineParams, get_combined_args
-from gaussian_renderer import GaussianModel
-from utils.loss_utils import l1_loss
-from utils.pose_utils import Pose, Lie
-from utils.image_utils import psnr
-from lpipsPyTorch import lpips
-from utils.loss_utils import ssim
+from .arguments import ModelParams, PipelineParams, get_combined_args
+from .gaussian_renderer import GaussianModel
+from .utils.loss_utils import l1_loss
+from .utils.pose_utils import Pose, Lie
+from .utils.image_utils import psnr
+from .lpipsPyTorch import lpips
+from .utils.loss_utils import ssim
 import sys
 
 
@@ -149,9 +149,10 @@ def render_sets(
             optim_pose,
         )
 
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
 
-if __name__ == "__main__":
-    # Set up command line argument parser
     parser = ArgumentParser(description="Testing script parameters")
     model = ModelParams(parser, sentinel=True)
     pipeline = PipelineParams(parser)
@@ -161,10 +162,9 @@ if __name__ == "__main__":
     parser.add_argument("--optim_pose", action="store_false")
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--device", type=str, default="cuda:0")
-    args = get_combined_args(parser)
-    print("Rendering " + args.model_path)
+    args = parser.parse_args(argv)
 
-    # Initialize system state (RNG)
+    print("Rendering " + args.model_path)
     safe_state(args.quiet, args.device)
 
     render_sets(
@@ -175,3 +175,7 @@ if __name__ == "__main__":
         args.skip_test,
         args.optim_pose,
     )
+
+
+if __name__ == "__main__":
+    main()

@@ -12,10 +12,10 @@
 import torch
 from torch import nn
 import numpy as np
-from utils.graphics_utils import getWorld2View2, getProjectionMatrix, fov2focal
+from ..utils.graphics_utils import getWorld2View2, getProjectionMatrix, fov2focal
 from easydict import EasyDict as edict
-from utils.pose_utils import Pose, Lie, interpolation_linear, interpolation_spline, interpolation_bezier, Quaternion
-from utils.depth_utils import estimate_depth
+from ..utils.pose_utils import Pose, Lie, interpolation_linear, interpolation_spline, interpolation_bezier, Quaternion
+from ..utils.depth_utils import estimate_depth
 
 
 class Camera(nn.Module):
