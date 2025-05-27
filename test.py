@@ -1,14 +1,13 @@
 import os
 
-from ai.colmap import (
+from analyzer.colmap import (
     extract_features,
     match_sequential,
     incremental_mapping,
     match_exhaustive,
     match_hybrid,
 )
-from ai.deblur_gs import train
-from ai.utils import extract_frames
+from analyzer.utils import extract_frames
 
 
 class Config:
@@ -79,6 +78,3 @@ if config.MATCH_HYBRID:
 
 if config.INCREMENTAL_MAPPING:
     incremental_mapping(config.colmap_path, config.frames_path)
-
-if config.TRAIN:
-    train(config.deblur_gs_path, config.colmap_path, config.frames_path)

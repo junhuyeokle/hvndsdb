@@ -21,7 +21,6 @@ def get_presigned_url(key):
         Params={
             "Bucket": AWS_BUCKET_NAME,
             "Key": key,
-            "ContentType": "image/jpeg",
         },
-        ExpiresIn=3600,
+        ExpiresIn=300,
     )
