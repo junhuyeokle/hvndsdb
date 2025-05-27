@@ -1,4 +1,10 @@
-name: hvndsdb_ai
+name: ai
 channels:
   - defaults
 dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - numpy
+      - opencv-python
+      - pycolmap

@@ -1,0 +1,17 @@
+name: fastapi
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - setuptools
+  - sqlalchemy
+  - tenacity
+  - boto3
+  - pip
+  - pip:
+      - fastapi
+      - uvicorn[standard]
+      - pymysql
+      - python-dotenv
+      - ../libs/ai

@@ -1,4 +1,4 @@
-name: deblur_gs_fastapi
+name: deblur_gs
 channels:
   - pytorch
   - conda-forge
