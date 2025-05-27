@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="ai",
+    name="analyzer",
     version="0.1.0",
-    description="AI",
+    description="HVNDSDB Analyzer",
     author="DPChanny",
     author_email="kyoungchan0516@gmail.com",
     packages=find_packages(),

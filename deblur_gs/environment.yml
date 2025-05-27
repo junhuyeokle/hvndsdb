@@ -19,9 +19,12 @@ dependencies:
   - scipy
   - matplotlib
   - pip:
+      - fastapi
+      - uvicorn[standard]
+      - python-dotenv
       - opencv-python
       - easydict
-      - file://../wheels/diff_gaussian_rasterization-0.0.0-cp37-cp37m-win_amd64.whl
-      - file://../wheels/pytorch3d-0.7.6-cp37-cp37m-win_amd64.whl
-      - file://../wheels/simple_knn-0.0.0-cp37-cp37m-win_amd64.whl
+      - ../wheels/diff_gaussian_rasterization-0.0.0-cp37-cp37m-win_amd64.whl
+      - ../wheels/pytorch3d-0.7.6-cp37-cp37m-win_amd64.whl
+      - ../wheels/simple_knn-0.0.0-cp37-cp37m-win_amd64.whl
       - ../libs/deblur-gs

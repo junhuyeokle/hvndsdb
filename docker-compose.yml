@@ -36,23 +36,9 @@ services:
     ports:
       - "${FASTAPI_PORT}:${FASTAPI_PORT}"
     volumes:
-      - ./fastapi/app:/app
+      - ./fastapi/app:/fastapi/app
+      - ./libs:/libs
     command: uvicorn main:app --host 0.0.0.0 --port ${FASTAPI_PORT} --reload
-    env_file:
-      - .env
-
-  nextjs:
-    build:
-      context: ./nextjs
-      dockerfile: Dockerfile
-    container_name: nextjs
-    restart: unless-stopped
-    ports:
-      - "${NEXTJS_PORT}:${NEXTJS_PORT}"
-    volumes:
-      - ./nextjs:/nextjs
-      - /nextjs/node_modules
-    command: npm start
     env_file:
       - .env
 

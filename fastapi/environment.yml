@@ -14,4 +14,4 @@ dependencies:
       - uvicorn[standard]
       - pymysql
       - python-dotenv
-      - ../libs/ai
+      - ../libs/analyzer
