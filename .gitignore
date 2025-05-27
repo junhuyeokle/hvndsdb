@@ -3,3 +3,5 @@ data/**
 !data/
 !data/*test*/
 !data/*test*/sample.mp4
+
+.env
