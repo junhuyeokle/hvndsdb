@@ -1,4 +1,4 @@
-name: deblur_gs
+name: deblur_gs_fastapi
 channels:
   - pytorch
   - conda-forge
@@ -21,6 +21,7 @@ dependencies:
   - pip:
       - opencv-python
       - easydict
-      - diff_gaussian_rasterization-0.0.0-cp37-cp37m-win_amd64.whl
-      - pytorch3d-0.7.6-cp37-cp37m-win_amd64.whl
-      - simple_knn-0.0.0-cp37-cp37m-win_amd64.whl
+      - file://../wheels/diff_gaussian_rasterization-0.0.0-cp37-cp37m-win_amd64.whl
+      - file://../wheels/pytorch3d-0.7.6-cp37-cp37m-win_amd64.whl
+      - file://../wheels/simple_knn-0.0.0-cp37-cp37m-win_amd64.whl
+      - ../libs/deblur-gs

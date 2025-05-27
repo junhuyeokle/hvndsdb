@@ -41,17 +41,17 @@ services:
     env_file:
       - .env
 
-  web:
+  nextjs:
     build:
-      context: ./web
+      context: ./nextjs
       dockerfile: Dockerfile
-    container_name: web
+    container_name: nextjs
     restart: unless-stopped
     ports:
-      - "${WEB_PORT}:${WEB_PORT}"
+      - "${NEXTJS_PORT}:${NEXTJS_PORT}"
     volumes:
-      - ./web:/web
-      - /web/node_modules
+      - ./nextjs:/nextjs
+      - /nextjs/node_modules
     command: npm start
     env_file:
       - .env
