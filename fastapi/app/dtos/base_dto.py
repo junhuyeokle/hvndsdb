@@ -13,6 +13,11 @@ class BaseResponseDTO(GenericModel, Generic[T]):
     data: Optional[T] = None
 
 
+class BaseWebSocketDTO(GenericModel, Generic[T]):
+    type: str
+    data: Optional[T] = None
+
+
 class TimeMixin(BaseModel):
     created_at: datetime
     updated_at: datetime

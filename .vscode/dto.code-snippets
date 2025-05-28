@@ -1,0 +1,31 @@
+{
+  "FastAPI DTO": {
+    "prefix": "dto",
+    "body": [
+      "from typing import List",
+      "from pydantic import BaseModel",
+      "from dtos.base_dto import BaseResponseDTO, TimeMixin",
+      "",
+      "class ${1:Entity}DTO(BaseModel):",
+      "    pass",
+      "",
+      "class ${1:Entity}DetailDTO(${1:Entity}DTO, TimeMixin):",
+      "    pass",
+      "",
+      "class Add${1:Entity}RequestDTO(BaseModel):",
+      "    pass",
+      "",
+      "class Update${1:Entity}RequestDTO(BaseModel):",
+      "    pass",
+      "",
+      "class Get${1:Entity}ListRequestDTO(BaseModel):",
+      "    pass",
+      "",
+      "class Get${1:Entity}ListResponseDTO(BaseResponseDTO[List[${1:Entity}DTO]]):",
+      "    pass",
+      "",
+      "class Get${1:Entity}DetailResponseDTO(BaseResponseDTO[${1:Entity}DetailDTO]):",
+      "    pass"
+    ]
+  }
+}
