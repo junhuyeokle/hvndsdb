@@ -213,12 +213,19 @@ namespace GaussianSplatting.Runtime.Utils
             public void Execute(int index)
             {
                 var splat = splatData[index];
+                splat.pos.x *= -1;
+                splat.pos.y *= -1;
+                splat.pos.z *= -1;
 
+                splat.nor.x *= -1;
+                splat.nor.y *= -1;
+                splat.nor.z *= -1;
+                
                 // rot
                 var q = splat.rot;
                 var qq = GaussianUtils.NormalizeSwizzleRotation(new float4(q.x, q.y, q.z, q.w));
                 qq = GaussianUtils.PackSmallest3Rotation(qq);
-                splat.rot = new Quaternion(qq.x, qq.y, qq.z, qq.w);
+                splat.rot = new Quaternion(-qq.x, -qq.y, -qq.z, -qq.w);
 
                 // scale
                 splat.scale = GaussianUtils.LinearScale(splat.scale);

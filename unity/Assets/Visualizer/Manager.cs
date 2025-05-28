@@ -1,5 +1,8 @@
+using GaussianSplatting.Editor;
 using GaussianSplatting.Runtime;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Visualizer
 {
@@ -7,25 +10,45 @@ namespace Visualizer
     {
         [SerializeField] private string buildingId;
         
-        private GaussianSplatAsset _asset;
+        [FormerlySerializedAs("renderers")] [SerializeField] private GaussianSplatRenderer[] gsrs;
 
-        public static string BuildingId { get; private set; }
+        private static string BuildingId { get; set; }
 
+        private string _path; 
+        
         private void Awake()
         {
             BuildingId = buildingId;
-        }
-        
-        [SerializeField] private GaussianSplatRenderer gsrs;
-        [SerializeField] private GaussianSplatRenderer gsrdp;
-        [SerializeField] private GaussianSplatRenderer gsrdpi;
- 
-        private void Update()
-        {
-            foreach (var gsr in new[] { gsrs, gsrdp, gsrdpi })
+            
+            _path = Config.DataPath + @"\" + BuildingId + @"\deblur_gs\output.ply";
+            
+            InitAsset();
+
+            foreach (var gsr in gsrs)
             {
-                // gsr.m_Asset = asset;
+                gsr.m_Asset = AssetDatabase.LoadAssetAtPath<GaussianSplatAsset>("Assets/GaussianAssets/" + BuildingId + "/output.asset");
             }
+        }
+
+        private void InitAsset()
+        {
+            var editor = ScriptableObject.CreateInstance<GaussianSplatAssetCreatorEditor>();
+
+            var mInputFile = typeof(GaussianSplatAssetCreatorEditor).GetField("m_InputFile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var mOutputFolder = typeof(GaussianSplatAssetCreatorEditor).GetField("m_OutputFolder", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var mImportCameras = typeof(GaussianSplatAssetCreatorEditor).GetField("m_ImportCameras", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var mQuality = typeof(GaussianSplatAssetCreatorEditor).GetField("m_Quality", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            mInputFile?.SetValue(editor, _path);
+            mOutputFolder?.SetValue(editor, "Assets/GaussianAssets/" + BuildingId + "/");
+            mImportCameras?.SetValue(editor, true);
+            mQuality?.SetValue(editor, 2);
+
+            typeof(GaussianSplatAssetCreatorEditor).GetMethod("ApplyQualityLevel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.Invoke(editor, null);
+
+            typeof(GaussianSplatAssetCreatorEditor).GetMethod("CreateAsset", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.Invoke(editor, null);
         }
     }
 }
