@@ -9,7 +9,7 @@ class BuildingDTO(BaseModel):
     user_id: int
     building_type: Optional[str] = None
 
-class BuildingBaseDTO(BaseModel):
+class BuildingDetailDTO(BuildingDTO, TimeMixin):
     user_id: Optional[int] = None
     building_type: Optional[str] = None
     # address: Optional[str] = None

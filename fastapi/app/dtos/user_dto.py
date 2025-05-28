@@ -8,7 +8,7 @@ class UserDTO(BaseModel):
     email: str
     name: str
 
-class UserBaseDTO(BaseModel):
+class UserDetailDTO(UserDTO, TimeMixin):
     email: Optional[str] = None
     name: Optional[str] = None
 
