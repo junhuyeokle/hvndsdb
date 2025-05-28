@@ -11,12 +11,8 @@ from exception import (
     custom_exception_handler,
     validation_exception_handler,
 )
-from routers.comment_router import comment_router
-from routers.post_router import post_router
-from routers.group_router import group_router
-from routers.crop_router import crop_router
-from routers.schedule_router import schedule_router
-from routers.sensor_router import sensor_router
+from routers.building_router import building_router
+from routers.user_router import user_router
 
 app = FastAPI()
 
@@ -35,12 +31,8 @@ def on_startup():
     database.Base.metadata.create_all(bind=database.engine)
 
 
-app.include_router(group_router, prefix="/api/group")
-app.include_router(crop_router, prefix="/api/crop")
-app.include_router(schedule_router, prefix="/api/schedule")
-app.include_router(sensor_router, prefix="/api/sensor")
-app.include_router(post_router, prefix="/api/post")
-app.include_router(comment_router, prefix="/api/comment")
+app.include_router(user_router, prefix="/api/user")
+app.include_router(building_router, prefix="/api/building")
 
 app.add_exception_handler(CustomException, custom_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)

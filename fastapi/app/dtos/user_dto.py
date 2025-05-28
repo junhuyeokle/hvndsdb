@@ -3,27 +3,33 @@ from pydantic import BaseModel
 from dtos.base_dto import BaseResponseDTO, TimeMixin
 from uuid import UUID
 
+
 class UserDTO(BaseModel):
     user_id: UUID
     email: str
     name: str
 
-class UserDetailDTO(UserDTO, TimeMixin):
-    email: Optional[str] = None
-    name: Optional[str] = None
 
-class AddUserRequestDTO(UserBaseDTO):
+class UserDetailDTO(UserDTO, TimeMixin):
+    pass
+
+
+class AddUserRequestDTO(UserDetailDTO):
     email: str
     name: str
 
-class UpdateUserRequestDTO(UserBaseDTO):
+
+class UpdateUserRequestDTO(UserDetailDTO):
     pass
 
-class GetUserDetailResponseDTO(BaseResponseDTO[UserDTO]):
+
+class GetUserDetailResponseDTO(BaseResponseDTO[UserDetailDTO]):
     pass
+
 
 class GetUserListRequestDTO(BaseModel):
     query: Optional[str] = None
+
 
 class GetUserListResponseDTO(BaseResponseDTO[List[UserDTO]]):
     pass
