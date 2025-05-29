@@ -10,12 +10,19 @@ import zipfile
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv("..env")
+load_dotenv(os.path.join(os.path.dirname(__file__), "../.env"))
+
+print(os.path.join(os.path.dirname(__file__), "../.env"))
 
 FASTAPI_HOST = os.getenv("FASTAPI_HOST")
 FASTAPI_PORT = os.getenv("FASTAPI_PORT")
 WS_KEY = os.getenv("WS_KEY")
-TEMP = ".temp"
+
+print(
+    f"FASTAPI_HOST: {FASTAPI_HOST}, FASTAPI_PORT: {FASTAPI_PORT}, WS_KEY: {WS_KEY}"
+)
+
+TEMP = "./temp"
 
 SERVER_URL = f"ws://{FASTAPI_HOST}:{FASTAPI_PORT}/ws/deblur_gs"
 
@@ -24,10 +31,10 @@ def generate_hmac_signature(ts: str, key: str) -> str:
     return hmac.new(key.encode(), ts.encode(), hashlib.sha256).hexdigest()
 
 
-async def download_and_extract_zip(url: str, filename: str):
+async def download_folder_from_presigned_url(url: str, path: str):
     target_dir = Path(TEMP)
     target_dir.mkdir(parents=True, exist_ok=True)
-    zip_path = target_dir / f"{filename}.zip"
+    zip_path = target_dir / f"{path}.zip"
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
@@ -39,7 +46,7 @@ async def download_and_extract_zip(url: str, filename: str):
             print(f"Downloaded to: {zip_path}")
 
     with zipfile.ZipFile(zip_path, "r") as zip_ref:
-        extract_path = target_dir / filename
+        extract_path = target_dir / path
         zip_ref.extractall(extract_path)
         print(f"Extracted to: {extract_path}")
 
@@ -57,8 +64,8 @@ async def handle_message(websocket, message):
             print("frames_url:", frames_url)
             print("colmap_url:", colmap_url)
 
-            # await download_and_extract_zip(frames_url, "frames")
-            # await download_and_extract_zip(colmap_url, "colmap")
+            await download_folder_from_presigned_url(frames_url, "frames")
+            await download_folder_from_presigned_url(colmap_url, "colmap")
 
             await websocket.send(json.dumps({"type": "complete", "data": None}))
 

@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from dtos.user_dto import (
     AddUserRequestDTO,
     UpdateUserRequestDTO,
@@ -6,6 +6,7 @@ from dtos.user_dto import (
     GetUserDetailResponseDTO,
     GetUserListRequestDTO,
     GetUserListResponseDTO,
+    UserDetailDTO,
 )
 from exception import CustomException, handle_exception
 from dtos.base_dto import BaseResponseDTO
@@ -17,12 +18,19 @@ def get_user_detail_service(
     user_id: UUID, db: Session
 ) -> GetUserDetailResponseDTO:
     try:
-        user = db.query(User).filter(User.user_id == user_id).first()
+        user = (
+            db.query(User)
+            .options(joinedload(User.buildings))
+            .filter(User.user_id == user_id)
+            .first()
+        )
         if not user:
             raise CustomException(404, "User not found.")
-        dto = UserDTO(user_id=user.user_id, email=user.email, name=user.name)
         return GetUserDetailResponseDTO(
-            success=True, code=200, message="User detail retrieved.", data=dto
+            success=True,
+            code=200,
+            message="User detail retrieved.",
+            data=UserDetailDTO.model_validate(user),
         )
     except Exception as e:
         handle_exception(e, db)
@@ -49,12 +57,12 @@ def get_user_list_service(
         if dto.query:
             query = query.filter(User.name.contains(dto.query))
         users = query.all()
-        dtos = [
-            UserDTO(user_id=u.user_id, email=u.email, name=u.name)
-            for u in users
-        ]
+        user_dtos = [UserDTO.model_validate(user) for user in users]
         return GetUserListResponseDTO(
-            success=True, code=200, message="User list retrieved.", data=dtos
+            success=True,
+            code=200,
+            message="User list retrieved.",
+            data=user_dtos,
         )
     except Exception as e:
         handle_exception(e, db)

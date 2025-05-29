@@ -8,32 +8,32 @@ from managers.unity_manager import UnityManager
 
 unity_router = APIRouter()
 
-manager = UnityManager()
+unity_manager = UnityManager()
 
 
 @unity_router.websocket("/")
-async def unity_route(ws: WebSocket):
+async def unity_route(websocket: WebSocket):
 
-    ts = ws.query_params.get("ts")
-    sig = ws.query_params.get("sig")
+    ts = websocket.query_params.get("ts")
+    sig = websocket.query_params.get("sig")
 
     if not ts or not sig:
-        await ws.close(code=4001)
+        await websocket.close(code=4001)
         return
     if not is_valid_timestamp(ts):
-        await ws.close(code=4002)
+        await websocket.close(code=4002)
         return
     if not verify_hmac(ts, sig):
-        await ws.close(code=4003)
+        await websocket.close(code=4003)
         return
 
-    client_id = ws.client.host
-    manager.accept(client_id, ws)
+    client_id = websocket.client.host
+    await unity_manager.accept(client_id, websocket)
 
     try:
         while True:
-            raw = await ws.receive_text()
+            raw = await websocket.receive_text()
             dto = BaseWebSocketDTO(**json.loads(raw))
 
     except WebSocketDisconnect:
-        manager.disconnect(client_id)
+        await unity_manager.disconnect(client_id)

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from dtos.building_dto import (
     AddBuildingRequestDTO,
+    BuildingDetailDTO,
     UpdateBuildingRequestDTO,
     BuildingDTO,
     GetBuildingDetailResponseDTO,
@@ -11,6 +12,9 @@ from exception import CustomException, handle_exception
 from dtos.base_dto import BaseResponseDTO
 from entities.building import Building
 from uuid import UUID
+
+from routers.deblur_gs_router import deblur_gs_manager
+from sc3 import get_presigned_upload_url
 
 
 def get_building_detail_service(
@@ -24,19 +28,11 @@ def get_building_detail_service(
         )
         if not building:
             raise CustomException(404, "Building not found.")
-        dto = BuildingDTO(
-            building_id=building.building_id,
-            name=building.name,
-            address=building.address,
-            user_id=building.user_id,
-            is_ready=building.is_ready,
-            s3_url=building.s3_url,
-        )
         return GetBuildingDetailResponseDTO(
             success=True,
             code=200,
             message="Building detail retrieved.",
-            data=dto,
+            data=BuildingDetailDTO.model_validate(building),
         )
     except Exception as e:
         handle_exception(e, db)
@@ -44,19 +40,26 @@ def get_building_detail_service(
 
 def add_building_service(
     dto: AddBuildingRequestDTO, db: Session
-) -> GetBuildingDetailResponseDTO:
+) -> BaseResponseDTO:
     try:
         building = Building(
             name=dto.name,
-            address=dto.address,
+            latitude=dto.latitude,
+            longitude=dto.longitude,
             user_id=dto.user_id,
-            is_ready=dto.is_ready if dto.is_ready is not None else False,
-            s3_url=dto.s3_url,
         )
         db.add(building)
         db.commit()
-        db.refresh(building)
-        return get_building_detail_service(building.building_id, db)
+        return BaseResponseDTO(
+            success=True,
+            code=201,
+            message="Building added successfully.",
+            data={
+                "sample_upload_url": get_presigned_upload_url(
+                    building.building_id + "/sample.mp4", "video/mp4"
+                )
+            },
+        )
     except Exception as e:
         handle_exception(e, db)
 
@@ -69,22 +72,14 @@ def get_building_list_service(
         if dto.query:
             query = query.filter(Building.name.contains(dto.query))
         buildings = query.all()
-        dtos = [
-            BuildingDTO(
-                building_id=b.building_id,
-                name=b.name,
-                address=b.address,
-                user_id=b.user_id,
-                is_ready=b.is_ready,
-                s3_url=b.s3_url,
-            )
-            for b in buildings
+        building_dtos = [
+            BuildingDTO.model_validate(building) for building in buildings
         ]
         return GetBuildingListResponseDTO(
             success=True,
             code=200,
             message="Building list retrieved.",
-            data=dtos,
+            data=building_dtos,
         )
     except Exception as e:
         handle_exception(e, db)
@@ -128,10 +123,3 @@ def delete_building_service(
         )
     except Exception as e:
         handle_exception(e, db)
-
-
-def get_building_user_service(
-    building_id: int, user_id: int, db: Session
-) -> BuildingDTO:
-    # 특정 빌딩-유저 정보 조회 로직
-    pass

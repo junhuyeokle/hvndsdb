@@ -10,6 +10,7 @@ dependencies:
   - boto3
   - pip
   - pip:
+      - aiohttp
       - fastapi
       - uvicorn[standard]
       - pymysql

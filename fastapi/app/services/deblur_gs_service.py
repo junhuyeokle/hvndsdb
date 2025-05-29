@@ -18,10 +18,14 @@ async def start_service(client_id: str, building_id: str, manager):
         BaseWebSocketDTO[StartDeblurGSDTO](
             type="start",
             data=StartDeblurGSDTO(
-                frames_url=get_presigned_download_url(building_id + "/frames"),
-                colmap_url=get_presigned_download_url(building_id + "/colmap"),
+                frames_url=get_presigned_download_url(
+                    building_id + "/frames.zip"
+                ),
+                colmap_url=get_presigned_download_url(
+                    building_id + "/colmap.zip"
+                ),
                 # deblur_gs_url=get_presigned_download_url(
-                #     building_id + "/deblur_gs"
+                #     building_id + "/deblur_gs.zip"
                 # ),
             ),
         ),
@@ -35,7 +39,8 @@ async def complete_service(client_id: str, manager):
             type="upload",
             data=UploadDeblurGSDTO(
                 deblur_gs_url=get_presigned_upload_url(
-                    manager.client_to_building[client_id] + "/deblur_gs"
+                    manager.client_to_building[client_id] + "/deblur_gs.zip",
+                    "application/zip",
                 ),
             ),
         ),

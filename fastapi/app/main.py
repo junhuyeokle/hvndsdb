@@ -11,6 +11,7 @@ from exception import (
     custom_exception_handler,
     validation_exception_handler,
 )
+from routers.analyzer_router import analyzer_router
 from routers.deblur_gs_router import deblur_gs_router
 from routers.unity_router import unity_router
 from routers.building_router import building_router
@@ -35,6 +36,7 @@ def on_startup():
 
 app.include_router(user_router, prefix="/api/user")
 app.include_router(building_router, prefix="/api/building")
+app.include_router(analyzer_router, prefix="/api/analyzer")
 
 app.include_router(unity_router, prefix="/ws/unity")
 app.include_router(deblur_gs_router, prefix="/ws/deblur_gs")

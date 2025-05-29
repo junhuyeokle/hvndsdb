@@ -13,6 +13,7 @@ class User(Base, TimeMixin):
     )
     email = Column(String(256), nullable=False)
     name = Column(String(256), nullable=False)
+
     buildings = relationship(
         "Building", back_populates="user", passive_deletes=True
     )
