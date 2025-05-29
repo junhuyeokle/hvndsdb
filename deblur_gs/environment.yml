@@ -19,8 +19,8 @@ dependencies:
   - scipy
   - matplotlib
   - pip:
-      - fastapi
-      - uvicorn[standard]
+      - aiohttp
+      - websockets
       - python-dotenv
       - opencv-python
       - easydict

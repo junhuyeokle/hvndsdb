@@ -15,7 +15,6 @@ from routers.deblur_gs_router import deblur_gs_router
 from routers.unity_router import unity_router
 from routers.building_router import building_router
 from routers.user_router import user_router
-from routers.general_router import general_router
 
 app = FastAPI()
 
@@ -36,7 +35,6 @@ def on_startup():
 
 app.include_router(user_router, prefix="/api/user")
 app.include_router(building_router, prefix="/api/building")
-app.include_router(general_router, prefix="/api/general")
 
 app.include_router(unity_router, prefix="/ws/unity")
 app.include_router(deblur_gs_router, prefix="/ws/deblur_gs")

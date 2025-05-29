@@ -3,7 +3,7 @@ from envs import (
     AWS_ACCESS_KEY,
     AWS_REGION,
     AWS_SECRET_KEY,
-    AWS_BUCKET_NAME,
+    S3_BUCKET_NAME,
 )
 
 
@@ -15,11 +15,22 @@ s3_client = boto3.client(
 )
 
 
-def get_presigned_url(key):
+def get_presigned_upload_url(key):
     return s3_client.generate_presigned_url(
         "put_object",
         Params={
-            "Bucket": AWS_BUCKET_NAME,
+            "Bucket": S3_BUCKET_NAME,
+            "Key": key,
+        },
+        ExpiresIn=300,
+    )
+
+
+def get_presigned_download_url(key: str) -> str:
+    return s3_client.generate_presigned_url(
+        "get_object",
+        Params={
+            "Bucket": S3_BUCKET_NAME,
             "Key": key,
         },
         ExpiresIn=300,

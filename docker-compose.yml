@@ -26,8 +26,8 @@ services:
 
   fastapi:
     build:
-      context: ./fastapi
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: ./fastapi/Dockerfile
     container_name: fastapi
     restart: unless-stopped
     depends_on:
