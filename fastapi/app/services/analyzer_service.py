@@ -119,57 +119,57 @@ async def analyze(building_id: str):
         )
     )
 
-    # await download_file_from_presigned_url(
-    #     get_presigned_download_url(building_id + "/sample.mp4"),
-    #     config.sample_path,
-    # )
+    await download_file_from_presigned_url(
+        get_presigned_download_url(building_id + "/sample.mp4"),
+        config.sample_path,
+    )
 
-    # if config.EXTRACT_FRAMES:
-    #     logger.info("Extracting frames...")
-    #     await run_worker_async(
-    #         logger, "extract_frames", config.sample_path, config.frames_path
-    #     )
+    if config.EXTRACT_FRAMES:
+        logger.info("Extracting frames...")
+        await run_worker_async(
+            logger, "extract_frames", config.sample_path, config.frames_path
+        )
 
-    #     await upload_folder_to_presigned_url(
-    #         get_presigned_upload_url(
-    #             building_id + "/frames.zip", "application/zip"
-    #         ),
-    #         config.frames_path,
-    #     )
+        await upload_folder_to_presigned_url(
+            get_presigned_upload_url(
+                building_id + "/frames.zip", "application/zip"
+            ),
+            config.frames_path,
+        )
 
-    # if config.EXTRACT_FEATURES:
-    #     logger.info("Extracting features...")
-    #     await run_worker_async(
-    #         logger, "extract_features", config.colmap_path, config.frames_path
-    #     )
+    if config.EXTRACT_FEATURES:
+        logger.info("Extracting features...")
+        await run_worker_async(
+            logger, "extract_features", config.colmap_path, config.frames_path
+        )
 
-    # if config.MATCH_SEQUENTIAL:
-    #     logger.info("Matching sequentially...")
-    #     await run_worker_async(logger, "match_sequential", config.colmap_path)
+    if config.MATCH_SEQUENTIAL:
+        logger.info("Matching sequentially...")
+        await run_worker_async(logger, "match_sequential", config.colmap_path)
 
-    # if config.MATCH_EXHAUSTIVE:
-    #     logger.info("Matching exhaustively...")
-    #     await run_worker_async(logger, "match_exhaustive", config.colmap_path)
+    if config.MATCH_EXHAUSTIVE:
+        logger.info("Matching exhaustively...")
+        await run_worker_async(logger, "match_exhaustive", config.colmap_path)
 
-    # if config.MATCH_HYBRID:
-    #     logger.info("Matching hybrid...")
-    #     await run_worker_async(logger, "match_hybrid", config.colmap_path)
+    if config.MATCH_HYBRID:
+        logger.info("Matching hybrid...")
+        await run_worker_async(logger, "match_hybrid", config.colmap_path)
 
-    # if config.INCREMENTAL_MAPPING:
-    #     logger.info("Running incremental mapping...")
-    #     await run_worker_async(
-    #         logger,
-    #         "incremental_mapping",
-    #         config.colmap_path,
-    #         config.frames_path,
-    #     )
+    if config.INCREMENTAL_MAPPING:
+        logger.info("Running incremental mapping...")
+        await run_worker_async(
+            logger,
+            "incremental_mapping",
+            config.colmap_path,
+            config.frames_path,
+        )
 
-    # logger.info("Uploading COLMAP data...")
-    # await upload_folder_to_presigned_url(
-    #     get_presigned_upload_url(
-    #         building_id + "/colmap.zip", "application/zip"
-    #     ),
-    #     config.colmap_path,
-    # )
+    logger.info("Uploading COLMAP data...")
+    await upload_folder_to_presigned_url(
+        get_presigned_upload_url(
+            building_id + "/colmap.zip", "application/zip"
+        ),
+        config.colmap_path,
+    )
 
     await deblur_gs_manager.start_deblur_gs(building_id=building_id)
