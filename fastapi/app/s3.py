@@ -8,6 +8,7 @@ from envs import (
     AWS_REGION,
     AWS_SECRET_KEY,
     S3_BUCKET_NAME,
+    TEMP,
 )
 
 
@@ -42,10 +43,10 @@ def get_presigned_download_url(key: str) -> str:
     )
 
 
-async def download_folder_from_presigned_url(url: str, path: str, temp: str):
+async def download_folder_from_presigned_url(url: str, path: str):
     os.makedirs(path, exist_ok=True)
 
-    zip_path = os.path.join(temp, "temp.zip")
+    zip_path = os.path.join(TEMP, "temp.zip")
 
     print(f"Downloading from {url} to {zip_path}")
 
@@ -80,8 +81,8 @@ async def download_file_from_presigned_url(url: str, path: str):
                     f.write(chunk)
 
 
-async def upload_folder_to_presigned_url(url: str, path: str, temp: str):
-    zip_path = os.path.join(temp, "temp.zip")
+async def upload_folder_to_presigned_url(url: str, path: str):
+    zip_path = os.path.join(TEMP, "temp.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for root, _, files in os.walk(path):
             for file in files:

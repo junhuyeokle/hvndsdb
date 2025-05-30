@@ -1,6 +1,7 @@
 import asyncio
 
 from dtos.base_dto import BaseResponseDTO
+from envs import TEMP
 from s3 import (
     download_file_from_presigned_url,
     download_folder_from_presigned_url,
@@ -40,8 +41,6 @@ async def analyze(building_id: str):
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
-    TEMP = "/temp"
-
     FRAMES = not is_key_exists(os.path.join(building_id, "frames.zip"))
     COLMAP = not is_key_exists(os.path.join(building_id, "colmap.zip"))
     DEBLUR_GS = not is_key_exists(os.path.join(building_id, "deblur_gs.zip"))
@@ -78,7 +77,6 @@ async def analyze(building_id: str):
                     os.path.join(building_id, "frames.zip"), "application/zip"
                 ),
                 frames_path,
-                TEMP,
             )
         else:
             logger.error("Frame extraction failed.")
@@ -92,7 +90,6 @@ async def analyze(building_id: str):
                     os.path.join(building_id, "frames.zip")
                 ),
                 frames_path,
-                TEMP,
             )
 
         logger.info("Extracting COLMAP data...")
@@ -103,7 +100,6 @@ async def analyze(building_id: str):
                     os.path.join(building_id, "colmap.zip"), "application/zip"
                 ),
                 colmap_path,
-                TEMP,
             )
         else:
             logger.error("COLMAP extraction failed.")

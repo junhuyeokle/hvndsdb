@@ -1,12 +1,20 @@
+import hashlib
+import hmac
 import os
 import zipfile
 import aiohttp
 
+from envs import TEMP
 
-async def download_folder_from_presigned_url(url: str, path: str, temp: str):
+
+def generate_hmac_signature(ts: str, key: str) -> str:
+    return hmac.new(key.encode(), ts.encode(), hashlib.sha256).hexdigest()
+
+
+async def download_folder_from_presigned_url(url: str, path: str):
     os.makedirs(path, exist_ok=True)
 
-    zip_path = os.path.join(temp, "temp.zip")
+    zip_path = os.path.join(TEMP, "temp.zip")
 
     print(f"Downloading from {url} to {zip_path}")
 
@@ -26,10 +34,10 @@ async def download_folder_from_presigned_url(url: str, path: str, temp: str):
     os.remove(zip_path)
 
 
-async def upload_folder_to_presigned_url(url: str, path: str, temp: str):
+async def upload_folder_to_presigned_url(url: str, path: str):
     print(f"Uploading folder {path} to {url}")
 
-    zip_path = os.path.join(temp, "temp.zip")
+    zip_path = os.path.join(TEMP, "temp.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for root, _, files in os.walk(path):
             for file in files:

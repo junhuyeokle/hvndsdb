@@ -1,1 +1,1 @@
-{ "python.analysis.extraPaths": ["./fastapi/app", "./deblur_gs/app"] }
+{ "python.analysis.extraPaths": [] }
