@@ -1,0 +1,49 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Docker Down",
+      "type": "shell",
+      "command": "docker compose down",
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Docker Build",
+      "type": "shell",
+      "command": "docker compose build",
+      "problemMatcher": [],
+      "dependsOn": ["Docker Down"],
+      "group": "build"
+    },
+    {
+      "label": "Docker Up",
+      "type": "shell",
+      "command": "docker compose up",
+      "problemMatcher": [],
+      "dependsOn": ["Docker Down"],
+      "group": "test"
+    },
+    {
+      "label": "Docker Build and Up",
+      "type": "shell",
+      "command": "docker compose up --build",
+      "problemMatcher": [],
+      "dependsOn": ["Docker Down"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Run Deblur GS",
+      "type": "shell",
+      "command": "./deblur_gs/run.bat",
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      }
+    }
+  ]
+}
