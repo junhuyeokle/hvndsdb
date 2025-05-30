@@ -56,18 +56,21 @@ async def download_file_from_presigned_url(url: str, path: str):
                     f.write(chunk)
 
 
-async def upload_folder_to_presigned_url(url: str, path: str):
-    zip_path = path + ".zip"
+async def upload_folder_to_presigned_url(url: str, path: str, temp: str):
+    zip_path = os.path.join(temp, "temp.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for root, _, files in os.walk(path):
             for file in files:
                 full_path = os.path.join(root, file)
                 rel_path = os.path.relpath(full_path, path)
                 zipf.write(full_path, rel_path)
+
     async with aiohttp.ClientSession(
         timeout=aiohttp.ClientTimeout(total=600)
     ) as session:
         with open(zip_path, "rb") as f:
-            response = await session.put(url, data=f)
-            if response.status != 200:
-                raise Exception(f"Upload failed: {await response.text()}")
+            await session.put(
+                url, data=f, headers={"Content-Type": "application/zip"}
+            )
+
+    os.remove(zip_path)

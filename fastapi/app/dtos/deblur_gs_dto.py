@@ -10,3 +10,7 @@ class StartDeblurGSDTO(BaseModel):
 
 class UploadDeblurGSDTO(BaseModel):
     deblur_gs_url: str
+
+
+class UpdateDeblurGSProgressDTO(BaseModel):
+    progress: str

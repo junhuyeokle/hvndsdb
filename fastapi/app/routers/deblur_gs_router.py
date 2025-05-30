@@ -3,9 +3,11 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from authorization import is_valid_timestamp, verify_hmac
 from dtos.base_dto import BaseWebSocketDTO
+from dtos.deblur_gs_dto import UpdateDeblurGSProgressDTO
 from managers.deblur_gs_manager import DeblurGSManager
 from services.deblur_gs_service import (
     complete_service,
+    update_progress_service,
     upload_complete_service,
 )
 
@@ -43,6 +45,12 @@ async def deblur_gs_route(websocket: WebSocket):
             if dto.type == "upload_complete":
                 upload_complete_service(
                     client_id=client_id, manager=deblur_gs_manager
+                )
+            if dto.type == "update_progress":
+                update_progress_service(
+                    client_id=client_id,
+                    dto=UpdateDeblurGSProgressDTO.model_validate(dto.data),
+                    manager=deblur_gs_manager,
                 )
 
     except WebSocketDisconnect:

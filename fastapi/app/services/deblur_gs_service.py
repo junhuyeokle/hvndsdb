@@ -1,35 +1,9 @@
 from dtos.base_dto import BaseWebSocketDTO
-from dtos.deblur_gs_dto import StartDeblurGSDTO, UploadDeblurGSDTO
-from sc3 import get_presigned_download_url, get_presigned_upload_url
-
-
-async def start_service(client_id: str, building_id: str, manager):
-    if building_id in manager.building_to_client:
-        return
-
-    if client_id in manager.client_to_building:
-        return
-
-    manager.building_to_client[building_id] = client_id
-    manager.client_to_building[client_id] = building_id
-
-    await manager.send(
-        client_id,
-        BaseWebSocketDTO[StartDeblurGSDTO](
-            type="start",
-            data=StartDeblurGSDTO(
-                frames_url=get_presigned_download_url(
-                    building_id + "/frames.zip"
-                ),
-                colmap_url=get_presigned_download_url(
-                    building_id + "/colmap.zip"
-                ),
-                # deblur_gs_url=get_presigned_download_url(
-                #     building_id + "/deblur_gs.zip"
-                # ),
-            ),
-        ),
-    )
+from dtos.deblur_gs_dto import (
+    UpdateDeblurGSProgressDTO,
+    UploadDeblurGSDTO,
+)
+from sc3 import get_presigned_upload_url
 
 
 async def complete_service(client_id: str, manager):
@@ -48,4 +22,13 @@ async def complete_service(client_id: str, manager):
 
 
 def upload_complete_service(client_id: str, manager):
-    manager.complete_deblur_gs(client_id=client_id)
+    manager.complete(client_id=client_id)
+
+
+def update_progress_service(
+    client_id: str, dto: UpdateDeblurGSProgressDTO, manager
+):
+    manager.update_progress(
+        client_id=client_id,
+        progress=dto.progress,
+    )

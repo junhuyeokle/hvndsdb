@@ -21,7 +21,7 @@ import socket
 
 
 def inverse_sigmoid(x):
-    return torch.log(x/(1-x))
+    return torch.log(x / (1 - x))
 
 
 def PILtoTorch(pil_image, resolution):
@@ -78,8 +78,7 @@ def get_expon_lr_func(
 
 
 def strip_lowerdiag(L):
-    uncertainty = torch.zeros(
-        (L.shape[0], 6), dtype=torch.float, device="cuda")
+    uncertainty = torch.zeros((L.shape[0], 6), dtype=torch.float, device="cuda")
 
     uncertainty[:, 0] = L[:, 0, 0]
     uncertainty[:, 1] = L[:, 0, 1]
@@ -95,27 +94,31 @@ def strip_symmetric(sym):
 
 
 def build_rotation(r):
-    norm = torch.sqrt(r[:, 0]*r[:, 0] + r[:, 1]*r[:, 1] +
-                      r[:, 2]*r[:, 2] + r[:, 3]*r[:, 3])
+    norm = torch.sqrt(
+        r[:, 0] * r[:, 0]
+        + r[:, 1] * r[:, 1]
+        + r[:, 2] * r[:, 2]
+        + r[:, 3] * r[:, 3]
+    )
 
     q = r / norm[:, None]
 
-    R = torch.zeros((q.size(0), 3, 3), device='cuda')
+    R = torch.zeros((q.size(0), 3, 3), device="cuda")
 
     x = q[:, 0]
     y = q[:, 1]
     z = q[:, 2]
     r = q[:, 3]
 
-    R[:, 0, 0] = 1 - 2 * (y*y + z*z)
-    R[:, 0, 1] = 2 * (x*y - r*z)
-    R[:, 0, 2] = 2 * (x*z + r*y)
-    R[:, 1, 0] = 2 * (x*y + r*z)
-    R[:, 1, 1] = 1 - 2 * (x*x + z*z)
-    R[:, 1, 2] = 2 * (y*z - r*x)
-    R[:, 2, 0] = 2 * (x*z - r*y)
-    R[:, 2, 1] = 2 * (y*z + r*x)
-    R[:, 2, 2] = 1 - 2 * (x*x + y*y)
+    R[:, 0, 0] = 1 - 2 * (y * y + z * z)
+    R[:, 0, 1] = 2 * (x * y - r * z)
+    R[:, 0, 2] = 2 * (x * z + r * y)
+    R[:, 1, 0] = 2 * (x * y + r * z)
+    R[:, 1, 1] = 1 - 2 * (x * x + z * z)
+    R[:, 1, 2] = 2 * (y * z - r * x)
+    R[:, 2, 0] = 2 * (x * z - r * y)
+    R[:, 2, 1] = 2 * (y * z + r * x)
+    R[:, 2, 2] = 1 - 2 * (x * x + y * y)
     return R
 
 
@@ -129,6 +132,7 @@ def build_scaling_rotation(s, r):
 
     L = R @ L
     return L
+
 
 def visualize_depth(depth, minmax=None, cmap=cv2.COLORMAP_TURBO):
     """
@@ -156,16 +160,19 @@ def visualize_depth(depth, minmax=None, cmap=cv2.COLORMAP_TURBO):
         return x
 
 
-def check_socket_open(hostname, port):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    is_open = False
+def check_socket_open(host: str, port: int) -> bool:
     try:
-        s.bind((hostname, port))
-    except socket.error:
-        is_open = True
-    finally:
-        s.close()
-    return is_open
+        for res in socket.getaddrinfo(
+            host, port, socket.AF_UNSPEC, socket.SOCK_STREAM
+        ):
+            af, socktype, proto, _, sa = res
+            with socket.socket(af, socktype, proto) as sock:
+                sock.settimeout(1)
+                sock.connect(sa)
+                return True
+    except Exception as e:
+        print(f"[Socket check failed] {host}:{port} → {e}")
+        return False
 
 
 def safe_state(silent, device):
@@ -178,8 +185,14 @@ def safe_state(silent, device):
         def write(self, x):
             if not self.silent:
                 if x.endswith("\n"):
-                    old_f.write(x.replace("\n", " [{}]\n".format(
-                        str(datetime.now().strftime("%d/%m %H:%M:%S")))))
+                    old_f.write(
+                        x.replace(
+                            "\n",
+                            " [{}]\n".format(
+                                str(datetime.now().strftime("%d/%m %H:%M:%S"))
+                            ),
+                        )
+                    )
                 else:
                     old_f.write(x)
 

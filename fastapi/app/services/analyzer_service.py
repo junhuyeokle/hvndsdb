@@ -72,9 +72,7 @@ async def analyze(building_id: str):
             building_id,
             EXTRACT_FRAMES=True,
             EXTRACT_FEATURES=True,
-            MATCH_HYBRID=False,
             MATCH_SEQUENTIAL=True,
-            MATCH_EXHAUSTIVE=False,
             INCREMENTAL_MAPPING=True,
             TRAIN=True,
         ):
@@ -93,18 +91,9 @@ async def analyze(building_id: str):
 
             self.EXTRACT_FRAMES = EXTRACT_FRAMES
             self.EXTRACT_FEATURES = EXTRACT_FEATURES
-            self.MATCH_HYBRID = MATCH_HYBRID
             self.MATCH_SEQUENTIAL = MATCH_SEQUENTIAL
-            self.MATCH_EXHAUSTIVE = MATCH_EXHAUSTIVE
             self.INCREMENTAL_MAPPING = INCREMENTAL_MAPPING
             self.TRAIN = TRAIN
-
-            self.MATCH_SEQUENTIAL = (
-                False if self.MATCH_HYBRID else self.MATCH_SEQUENTIAL
-            )
-            self.MATCH_EXHAUSTIVE = (
-                False if self.MATCH_HYBRID else self.MATCH_EXHAUSTIVE
-            )
 
     config = Config(building_id=building_id)
 
@@ -119,8 +108,9 @@ async def analyze(building_id: str):
         )
     )
 
+    logger.info("Downloading sample...")
     await download_file_from_presigned_url(
-        get_presigned_download_url(building_id + "/sample.mp4"),
+        get_presigned_download_url(os.path.join(building_id, "sample.mp4")),
         config.sample_path,
     )
 
@@ -130,11 +120,13 @@ async def analyze(building_id: str):
             logger, "extract_frames", config.sample_path, config.frames_path
         )
 
+        logger.info("Uploading frames...")
         await upload_folder_to_presigned_url(
             get_presigned_upload_url(
-                building_id + "/frames.zip", "application/zip"
+                os.path.join(building_id, "frames.zip"), "application/zip"
             ),
             config.frames_path,
+            TEMP,
         )
 
     if config.EXTRACT_FEATURES:
@@ -146,14 +138,6 @@ async def analyze(building_id: str):
     if config.MATCH_SEQUENTIAL:
         logger.info("Matching sequentially...")
         await run_worker_async(logger, "match_sequential", config.colmap_path)
-
-    if config.MATCH_EXHAUSTIVE:
-        logger.info("Matching exhaustively...")
-        await run_worker_async(logger, "match_exhaustive", config.colmap_path)
-
-    if config.MATCH_HYBRID:
-        logger.info("Matching hybrid...")
-        await run_worker_async(logger, "match_hybrid", config.colmap_path)
 
     if config.INCREMENTAL_MAPPING:
         logger.info("Running incremental mapping...")
@@ -167,9 +151,13 @@ async def analyze(building_id: str):
     logger.info("Uploading COLMAP data...")
     await upload_folder_to_presigned_url(
         get_presigned_upload_url(
-            building_id + "/colmap.zip", "application/zip"
+            os.path.join(building_id, "colmap.zip"), "application/zip"
         ),
         config.colmap_path,
+        TEMP,
     )
 
-    await deblur_gs_manager.start_deblur_gs(building_id=building_id)
+    await deblur_gs_manager.start(building_id=building_id)
+
+    while building_id in deblur_gs_manager.building_progress:
+        logger.info(await deblur_gs_manager.get_progress(building_id))
