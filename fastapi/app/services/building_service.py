@@ -14,7 +14,7 @@ from entities.building import Building
 from uuid import UUID
 
 from routers.deblur_gs_router import deblur_gs_manager
-from sc3 import get_presigned_upload_url
+from s3 import get_presigned_upload_url
 
 
 def get_building_detail_service(

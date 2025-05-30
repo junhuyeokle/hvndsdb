@@ -3,7 +3,7 @@ from dtos.deblur_gs_dto import (
     UpdateDeblurGSProgressDTO,
     UploadDeblurGSDTO,
 )
-from sc3 import get_presigned_upload_url
+from s3 import get_presigned_upload_url
 
 
 async def complete_service(client_id: str, manager):

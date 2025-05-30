@@ -3,7 +3,7 @@ from typing import List, Optional
 from dtos.base_dto import BaseWebSocketDTO
 from dtos.deblur_gs_dto import StartDeblurGSDTO, UpdateDeblurGSProgressDTO
 from managers.web_socket_manager import WebSocketManager
-from sc3 import get_presigned_download_url
+from s3 import get_presigned_download_url
 
 
 class DeblurGSManager(WebSocketManager):
