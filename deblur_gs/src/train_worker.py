@@ -1,11 +1,12 @@
 import asyncio
 import subprocess
 
+from utils import get_last_checkpoint
 from dto import UpdateDeblurGSProgressDTO, BaseWebSocketDTO
 
-ITERATION = 1
-SAVE_ITERATION_INTERVAL = 500
-SAVE_CHECKPOINT_INTERVAL = 1000
+ITERATION = 100
+SAVE_POINT_CLOUD_INTERVAL = 50
+SAVE_CHECKPOINT_INTERVAL = 100
 
 VISDOM_PORT = 8097
 VISDOM_HOST = "127.0.0.1"
@@ -49,7 +50,7 @@ async def run(
         "--iterations",
         str(ITERATION),
         "--save_iterations",
-        *[str(i) for i in range(0, ITERATION + 1, SAVE_ITERATION_INTERVAL)],
+        *[str(i) for i in range(0, ITERATION + 1, SAVE_POINT_CLOUD_INTERVAL)],
         "--checkpoint_iterations",
         *[str(i) for i in range(0, ITERATION + 1, SAVE_CHECKPOINT_INTERVAL)],
         "--test_iterations",
@@ -60,6 +61,10 @@ async def run(
         "--visdom_port",
         str(VISDOM_PORT),
     ]
+
+    start_checkpoint = get_last_checkpoint()
+    if start_checkpoint is not None:
+        cmd += ["--start_checkpoint", str(start_checkpoint)]
 
     print("Running command:", " ".join(cmd))
 

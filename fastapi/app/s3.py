@@ -90,9 +90,7 @@ async def upload_folder_to_presigned_url(url: str, path: str):
                 rel_path = os.path.relpath(full_path, path)
                 zipf.write(full_path, rel_path)
 
-    async with aiohttp.ClientSession(
-        timeout=aiohttp.ClientTimeout(total=600)
-    ) as session:
+    async with aiohttp.ClientSession() as session:
         with open(zip_path, "rb") as f:
             await session.put(
                 url, data=f, headers={"Content-Type": "application/zip"}

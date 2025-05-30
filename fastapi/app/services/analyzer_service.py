@@ -105,7 +105,7 @@ async def analyze(building_id: str):
             logger.error("COLMAP extraction failed.")
             return
 
-    if DEBLUR_GS:
+    if True:
         logger.info("Starting Deblur GS...")
         await deblur_gs_manager.start(building_id=building_id)
 

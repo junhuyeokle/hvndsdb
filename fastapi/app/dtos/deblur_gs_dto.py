@@ -14,3 +14,7 @@ class UploadDeblurGSDTO(BaseModel):
 
 class UpdateDeblurGSProgressDTO(BaseModel):
     progress: str
+
+
+class PLYUrlDTO(BaseModel):
+    ply_url: str

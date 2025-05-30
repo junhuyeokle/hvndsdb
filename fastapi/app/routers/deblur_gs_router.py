@@ -7,6 +7,7 @@ from dtos.deblur_gs_dto import UpdateDeblurGSProgressDTO
 from managers.deblur_gs_manager import DeblurGSManager
 from services.deblur_gs_service import (
     complete_service,
+    ply_url_service,
     update_progress_service,
     upload_complete_service,
 )
@@ -51,6 +52,11 @@ async def deblur_gs_route(websocket: WebSocket):
                     client_id=client_id,
                     dto=UpdateDeblurGSProgressDTO.model_validate(dto.data),
                     manager=deblur_gs_manager,
+                )
+
+            if dto.type == "ply_url":
+                await ply_url_service(
+                    client_id=client_id, manager=deblur_gs_manager
                 )
 
     except WebSocketDisconnect:

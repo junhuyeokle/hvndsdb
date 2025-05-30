@@ -1,5 +1,6 @@
 from dtos.base_dto import BaseWebSocketDTO
 from dtos.deblur_gs_dto import (
+    PLYUrlDTO,
     UpdateDeblurGSProgressDTO,
     UploadDeblurGSDTO,
 )
@@ -31,4 +32,19 @@ def update_progress_service(
     manager.update_progress(
         client_id=client_id,
         progress=dto.progress,
+    )
+
+
+async def ply_url_service(client_id: str, manager):
+    await manager.send(
+        client_id,
+        BaseWebSocketDTO[PLYUrlDTO](
+            type="ply_url",
+            data=PLYUrlDTO(
+                ply_url=get_presigned_upload_url(
+                    manager.client_to_building[client_id] + "/point_cloud.ply",
+                    "application/octet-stream",
+                )
+            ),
+        ),
     )
