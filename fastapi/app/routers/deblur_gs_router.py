@@ -41,9 +41,9 @@ async def deblur_gs_route(websocket: WebSocket):
             if dto.type == "complete":
                 await complete_service(client_id=client_id)
             if dto.type == "upload_complete":
-                upload_complete_service(client_id=client_id)
+                await upload_complete_service(client_id=client_id)
             if dto.type == "update_progress":
-                update_progress_service(
+                await update_progress_service(
                     client_id=client_id,
                     dto=UpdateDeblurGSProgressDTO.model_validate(dto.data),
                 )

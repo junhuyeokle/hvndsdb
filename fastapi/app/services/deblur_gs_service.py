@@ -28,11 +28,13 @@ async def complete_service(client_id: str):
     await upload_service(client_id=client_id)
 
 
-def upload_complete_service(client_id: str):
-    deblur_gs_manager.complete(client_id=client_id)
+async def upload_complete_service(client_id: str):
+    await deblur_gs_manager.complete(client_id=client_id)
 
 
-def update_progress_service(client_id: str, dto: UpdateDeblurGSProgressDTO):
+async def update_progress_service(
+    client_id: str, dto: UpdateDeblurGSProgressDTO
+):
     deblur_gs_manager.update_progress(
         client_id=client_id,
         progress=dto.progress,

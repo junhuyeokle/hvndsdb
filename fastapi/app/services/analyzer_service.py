@@ -8,5 +8,5 @@ async def start_service(client_id: str, dto: StartAnalyzerDTO):
     )
 
 
-async def stop_service(client_id: str):
-    await analyzer_manager.stop(client_id=client_id)
+async def stop_deblur_gs_service(client_id: str):
+    await analyzer_manager.stop_deblur_gs(client_id=client_id)

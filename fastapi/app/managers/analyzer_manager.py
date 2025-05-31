@@ -1,5 +1,6 @@
 from asyncio import Task
 import asyncio
+from managers import deblur_gs_manager
 from managers.web_socket_manager import WebSocketManager
 from workers import analyzer
 
@@ -31,25 +32,15 @@ class AnalyzerManager(WebSocketManager):
         self.client_to_building[client_id] = building_id
 
         self.client_to_task[client_id] = asyncio.create_task(
-            analyzer.run(building_id=building_id, deblur_gs_manager=self)
+            analyzer.run(building_id=building_id)
         )
         self.building_to_task[building_id] = self.client_to_task[client_id]
 
-    async def stop(
+    async def stop_deblur_gs(
         self,
         client_id: str,
     ):
-        building_id = self.client_to_building.pop(client_id, None)
-        if building_id:
-            self.building_to_client.pop(building_id, None)
-
-        task = self.client_to_task.pop(client_id, None)
-        if task:
-            task.cancel()
-
-        task = self.building_to_task.pop(building_id, None)
-        if task:
-            task.cancel()
+        deblur_gs_manager.stop(building_id=self.client_to_building[client_id])
 
 
 analyzer_manager = AnalyzerManager()

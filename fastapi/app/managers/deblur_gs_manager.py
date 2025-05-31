@@ -55,11 +55,17 @@ class DeblurGSManager(WebSocketManager):
             ),
         )
 
-    def complete(self, client_id: str):
+    async def complete(self, client_id: str):
         building_id = self.client_to_building.pop(client_id, None)
         self.building_to_client.pop(building_id, None)
+        cond = self.building_progress_conditions.setdefault(
+            building_id, asyncio.Condition()
+        )
 
-    def update_progress(
+        async with cond:
+            cond.notify_all()
+
+    async def update_progress(
         self,
         client_id: str,
         progress: str,
@@ -80,11 +86,8 @@ class DeblurGSManager(WebSocketManager):
             building_id, asyncio.Condition()
         )
 
-        async def notify():
-            async with cond:
-                cond.notify_all()
-
-        asyncio.create_task(notify())
+        async with cond:
+            cond.notify_all()
 
     async def get_progress(self, building_id: str) -> str:
         cond = self.building_progress_conditions.setdefault(
@@ -103,7 +106,7 @@ class DeblurGSManager(WebSocketManager):
     async def stop(self, building_id: str):
         await self.send(
             self.building_to_client[building_id],
-            BaseWebSocketDTO[None](type="stop", data=None).json(),
+            BaseWebSocketDTO[None](type="stop", data=None),
         )
 
 

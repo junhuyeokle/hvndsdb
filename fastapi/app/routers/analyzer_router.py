@@ -4,7 +4,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from dtos.analyzer_dto import StartAnalyzerDTO
 from dtos.base_dto import BaseWebSocketDTO
 from managers.analyzer_manager import analyzer_manager
-from services.analyzer_service import start_service, stop_service
+from services.analyzer_service import start_service, stop_deblur_gs_service
 
 analyzer_router = APIRouter()
 
@@ -22,8 +22,8 @@ async def analyzer_route(websocket: WebSocket):
                 await start_service(
                     client_id, StartAnalyzerDTO.model_validate(dto.data)
                 )
-            if dto.type == "stop":
-                await stop_service(client_id=client_id)
+            if dto.type == "stop_deblur_gs":
+                await stop_deblur_gs_service(client_id=client_id)
 
     except WebSocketDisconnect:
         await analyzer_manager.disconnect(client_id)
