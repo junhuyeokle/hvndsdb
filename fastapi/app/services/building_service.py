@@ -8,13 +8,11 @@ from dtos.building_dto import (
     GetBuildingListRequestDTO,
     GetBuildingListResponseDTO,
 )
-from exception import CustomException, handle_exception
+from utils.exception import CustomException, handle_exception
 from dtos.base_dto import BaseResponseDTO
 from entities.building import Building
 from uuid import UUID
-
-from routers.deblur_gs_router import deblur_gs_manager
-from s3 import get_presigned_upload_url
+from utils.s3 import get_presigned_upload_url
 
 
 def get_building_detail_service(

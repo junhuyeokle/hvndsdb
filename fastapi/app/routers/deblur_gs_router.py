@@ -1,7 +1,7 @@
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from authorization import is_valid_timestamp, verify_hmac
+from utils.authorization import is_valid_timestamp, verify_hmac
 from dtos.base_dto import BaseWebSocketDTO
 from dtos.deblur_gs_dto import UpdateDeblurGSProgressDTO
 from managers.deblur_gs_manager import deblur_gs_manager

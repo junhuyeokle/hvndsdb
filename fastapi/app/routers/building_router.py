@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from database import get_db
+from utils.database import get_db
 from dtos.building_dto import (
     AddBuildingRequestDTO,
     UpdateBuildingRequestDTO,

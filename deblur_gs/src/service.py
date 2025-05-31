@@ -10,7 +10,9 @@ from utils import (
 )
 
 
-async def start_service(response_queue: asyncio.Queue, dto: StartDeblurGSDTO, shared_data: dict):
+async def start_service(
+    response_queue: asyncio.Queue, dto: StartDeblurGSDTO, shared_data: dict
+):
     await download_folder_from_presigned_url(
         dto.frames_url, os.path.join(TEMP, "frames")
     )

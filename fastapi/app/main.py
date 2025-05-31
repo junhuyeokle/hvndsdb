@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-import database
+import utils.database as database
 
 # necessary to import all models to register them with SQLAlchemy
 import entities
 
-from exception import (
+from utils.exception import (
     CustomException,
     custom_exception_handler,
     validation_exception_handler,

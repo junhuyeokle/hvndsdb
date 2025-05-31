@@ -67,7 +67,9 @@ async def handler(
         )
 
     elif dto.type == "stop":
-        await stop_service(response_queue, UploadDeblurGSDTO.parse_obj(dto.data), shared_data)
+        await stop_service(
+            response_queue, UploadDeblurGSDTO.parse_obj(dto.data), shared_data
+        )
 
     elif dto.type == "upload":
         await upload_service(

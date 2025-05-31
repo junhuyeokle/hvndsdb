@@ -2,9 +2,9 @@ import asyncio
 import os
 
 from fastapi.logger import logger
-from envs import TEMP
+from utils.envs import TEMP
 from managers.deblur_gs_manager import deblur_gs_manager
-from s3 import (
+from utils.s3 import (
     download_file_from_presigned_url,
     download_folder_from_presigned_url,
     get_presigned_download_url,

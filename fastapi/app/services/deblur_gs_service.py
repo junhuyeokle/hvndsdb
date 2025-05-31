@@ -5,10 +5,10 @@ from dtos.deblur_gs_dto import (
     UploadDeblurGSDTO,
 )
 from managers.deblur_gs_manager import deblur_gs_manager
-from s3 import get_presigned_upload_url
+from utils.s3 import get_presigned_upload_url
 
 
-async def complete_service(client_id: str):
+async def upload_service(client_id: str):
     await deblur_gs_manager.send(
         client_id,
         BaseWebSocketDTO[UploadDeblurGSDTO](
@@ -22,6 +22,10 @@ async def complete_service(client_id: str):
             ),
         ),
     )
+
+
+async def complete_service(client_id: str):
+    await upload_service(client_id=client_id)
 
 
 def upload_complete_service(client_id: str):
@@ -52,16 +56,4 @@ async def ply_url_service(client_id: str):
 
 
 async def stop_complete_service(client_id: str):
-    await deblur_gs_manager.send(
-        client_id,
-        BaseWebSocketDTO[UploadDeblurGSDTO](
-            type="upload",
-            data=UploadDeblurGSDTO(
-                deblur_gs_url=get_presigned_upload_url(
-                    deblur_gs_manager.client_to_building[client_id]
-                    + "/deblur_gs.zip",
-                    "application/zip",
-                ),
-            ),
-        ),
-    )
+    await upload_service(client_id=client_id)

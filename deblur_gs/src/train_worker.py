@@ -9,6 +9,7 @@ ITERATION = 10000
 SAVE_POINT_CLOUD_INTERVAL = 50
 SAVE_CHECKPOINT_INTERVAL = 100
 
+
 async def run(
     send_queue: asyncio.Queue,
     colmap_path: str,
@@ -44,12 +45,26 @@ async def run(
 
     cmd += [
         "--save_iterations",
-        *[str(i) for i in range(0 if start_checkpoint is None else start_checkpoint, iteration + 1, SAVE_POINT_CLOUD_INTERVAL)]
+        *[
+            str(i)
+            for i in range(
+                0 if start_checkpoint is None else start_checkpoint,
+                iteration + 1,
+                SAVE_POINT_CLOUD_INTERVAL,
+            )
+        ],
     ]
 
     cmd += [
         "--checkpoint_iterations",
-        *[str(i) for i in range(0 if start_checkpoint is None else start_checkpoint, iteration + 1, SAVE_CHECKPOINT_INTERVAL)],
+        *[
+            str(i)
+            for i in range(
+                0 if start_checkpoint is None else start_checkpoint,
+                iteration + 1,
+                SAVE_CHECKPOINT_INTERVAL,
+            )
+        ],
     ]
 
     print(" ".join(cmd))
@@ -89,7 +104,9 @@ async def run(
         if process and process.poll() is None:
             process.terminate()
             try:
-                await loop.run_in_executor(None, lambda: process.wait(timeout=5))
+                await loop.run_in_executor(
+                    None, lambda: process.wait(timeout=5)
+                )
             except subprocess.TimeoutExpired:
                 print("Killing process due to timeout")
                 process.kill()

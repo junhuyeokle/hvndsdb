@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import time
 
-from envs import WS_KEY
+from utils.envs import WS_KEY
 
 TIMESTAMP_VALID_WINDOW = 3  # seconds
 

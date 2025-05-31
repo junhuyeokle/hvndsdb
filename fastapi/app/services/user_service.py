@@ -8,7 +8,7 @@ from dtos.user_dto import (
     GetUserListResponseDTO,
     UserDetailDTO,
 )
-from exception import CustomException, handle_exception
+from utils.exception import CustomException, handle_exception
 from dtos.base_dto import BaseResponseDTO
 from entities.user import User
 from uuid import UUID

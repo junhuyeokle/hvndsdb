@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
-from database import Base
+from utils.database import Base
 from entities.time_mixin import TimeMixin
 import uuid
 

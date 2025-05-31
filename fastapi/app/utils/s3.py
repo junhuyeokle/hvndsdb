@@ -3,7 +3,7 @@ import zipfile
 import aiohttp
 import boto3
 import botocore
-from envs import (
+from utils.envs import (
     AWS_ACCESS_KEY,
     AWS_REGION,
     AWS_SECRET_KEY,
