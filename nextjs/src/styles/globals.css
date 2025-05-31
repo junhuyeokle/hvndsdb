@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@import "./tokens/color.css";
+@import "./tokens/typography.css";
+@import "./tokens/spacing.css";
+
+:root {
+  /* Radius */
+  --radius-sm: 0.25rem;
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+  /* Opacity */
+  --opacity-disabled: 0.5;
+
+  /* Z-index */
+  --z-dropdown: 1000;
+  --z-overlay: 1100;
+  --z-modal: 1200;
+  --z-popover: 1300;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  height: 100%;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+a:hover {
+  text-decoration: underline;
+}
