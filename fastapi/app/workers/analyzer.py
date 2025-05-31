@@ -18,14 +18,12 @@ async def run(building_id: str):
     FRAMES = not is_key_exists(os.path.join(building_id, "frames.zip"))
     COLMAP = not is_key_exists(os.path.join(building_id, "colmap.zip"))
 
-    logger.info(" ".join([str(b) for b in [FRAMES, COLMAP]]))
-
     sample_path = os.path.join(TEMP, building_id, "sample.mp4")
     colmap_path = os.path.join(TEMP, building_id, "colmap")
     frames_path = os.path.join(TEMP, building_id, "frames")
 
     logger.info(
-        " ".join(
+        "\n".join(
             [
                 sample_path,
                 colmap_path,

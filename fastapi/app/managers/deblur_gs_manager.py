@@ -13,7 +13,7 @@ class DeblurGSManager(WebSocketManager):
         self.building_to_client: dict[str, str] = {}
         self.client_to_building: dict[str, str] = {}
         self.building_progress: dict[str, List[str]] = {}
-        self.building_progress_events: dict[str, asyncio.Event] = {}  # ✅ 변경
+        self.building_progress_conditions: dict[str, asyncio.Condition] = {}
 
     async def start(
         self,
@@ -62,16 +62,21 @@ class DeblurGSManager(WebSocketManager):
             ),
         )
 
-    async def disconnect(self, client_id: str):
-        await super().disconnect(client_id)
-
+    async def complete(self, client_id: str):
         building_id = self.client_to_building.pop(client_id, None)
         self.building_to_client.pop(building_id, None)
 
-        event = self.building_progress_events.setdefault(
-            building_id, asyncio.Event()
+        cond = self.building_progress_conditions.setdefault(
+            building_id, asyncio.Condition()
         )
-        event.set()
+
+        async with cond:
+            cond.notify_all()
+
+    async def disconnect(self, client_id: str):
+        await super().disconnect(client_id)
+
+        await self.complete(client_id)
 
     async def update_progress(
         self,
@@ -90,18 +95,20 @@ class DeblurGSManager(WebSocketManager):
         else:
             self.building_progress[building_id].append(progress)
 
-        event = self.building_progress_events.setdefault(
-            building_id, asyncio.Event()
+        cond = self.building_progress_conditions.setdefault(
+            building_id, asyncio.Condition()
         )
-        event.set()
+
+        async with cond:
+            cond.notify_all()
 
     async def get_progress(self, building_id: str) -> str:
-        event = self.building_progress_events.setdefault(
-            building_id, asyncio.Event()
+        cond = self.building_progress_conditions.setdefault(
+            building_id, asyncio.Condition()
         )
 
-        await event.wait()
-        event.clear()
+        async with cond:
+            await cond.wait()
 
         return self.building_progress[building_id][-1]
 

@@ -17,6 +17,18 @@ from routers.unity_router import unity_router
 from routers.building_router import building_router
 from routers.user_router import user_router
 
+from fastapi.logger import logger
+import logging
+
+logger.setLevel(logging.INFO)
+
+if not logger.hasHandlers():
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter("%(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+
 app = FastAPI()
 
 app.add_middleware(

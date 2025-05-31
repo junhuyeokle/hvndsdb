@@ -29,7 +29,7 @@ async def complete_service(client_id: str):
 
 
 async def upload_complete_service(client_id: str):
-    await deblur_gs_manager.disconnect(client_id=client_id)
+    await deblur_gs_manager.complete(client_id=client_id)
 
 
 async def update_progress_service(
