@@ -36,8 +36,8 @@ def on_startup():
 
 app.include_router(user_router, prefix="/api/user")
 app.include_router(building_router, prefix="/api/building")
-app.include_router(analyzer_router, prefix="/api/analyzer")
 
+app.include_router(analyzer_router, prefix="/ws/analyzer")
 app.include_router(unity_router, prefix="/ws/unity")
 app.include_router(deblur_gs_router, prefix="/ws/deblur_gs")
 

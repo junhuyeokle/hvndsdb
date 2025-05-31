@@ -1,9 +1,10 @@
 import asyncio
+import os
 from typing import List, Optional
 from dtos.base_dto import BaseWebSocketDTO
 from dtos.deblur_gs_dto import StartDeblurGSDTO
 from managers.web_socket_manager import WebSocketManager
-from utils.s3 import get_presigned_download_url
+from utils.s3 import get_presigned_download_url, is_key_exists
 
 
 class DeblurGSManager(WebSocketManager):
@@ -12,7 +13,7 @@ class DeblurGSManager(WebSocketManager):
         self.building_to_client: dict[str, str] = {}
         self.client_to_building: dict[str, str] = {}
         self.building_progress: dict[str, List[str]] = {}
-        self.building_progress_conditions: dict[str, asyncio.Condition] = {}
+        self.building_progress_events: dict[str, asyncio.Event] = {}  # ✅ 변경
 
     async def start(
         self,
@@ -48,22 +49,29 @@ class DeblurGSManager(WebSocketManager):
                     colmap_url=get_presigned_download_url(
                         building_id + "/colmap.zip"
                     ),
-                    # deblur_gs_url=get_presigned_download_url(
-                    #     building_id + "/deblur_gs.zip"
-                    # ),
+                    deblur_gs_url=(
+                        get_presigned_download_url(
+                            building_id + "/deblur_gs.zip"
+                        )
+                        if is_key_exists(
+                            os.path.join(building_id, "deblur_gs.zip")
+                        )
+                        else None
+                    ),
                 ),
             ),
         )
 
-    async def complete(self, client_id: str):
+    async def disconnect(self, client_id: str):
+        await super().disconnect(client_id)
+
         building_id = self.client_to_building.pop(client_id, None)
         self.building_to_client.pop(building_id, None)
-        cond = self.building_progress_conditions.setdefault(
-            building_id, asyncio.Condition()
-        )
 
-        async with cond:
-            cond.notify_all()
+        event = self.building_progress_events.setdefault(
+            building_id, asyncio.Event()
+        )
+        event.set()
 
     async def update_progress(
         self,
@@ -82,24 +90,18 @@ class DeblurGSManager(WebSocketManager):
         else:
             self.building_progress[building_id].append(progress)
 
-        cond = self.building_progress_conditions.setdefault(
-            building_id, asyncio.Condition()
+        event = self.building_progress_events.setdefault(
+            building_id, asyncio.Event()
         )
-
-        async with cond:
-            cond.notify_all()
+        event.set()
 
     async def get_progress(self, building_id: str) -> str:
-        cond = self.building_progress_conditions.setdefault(
-            building_id, asyncio.Condition()
+        event = self.building_progress_events.setdefault(
+            building_id, asyncio.Event()
         )
-        last = self.building_progress.get(building_id, [""])[-1]
 
-        async with cond:
-            await cond.wait_for(
-                lambda: self.building_progress.get(building_id, [""])[-1]
-                != last
-            )
+        await event.wait()
+        event.clear()
 
         return self.building_progress[building_id][-1]
 

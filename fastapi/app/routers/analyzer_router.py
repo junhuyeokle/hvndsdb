@@ -25,5 +25,5 @@ async def analyzer_route(websocket: WebSocket):
             if dto.type == "stop_deblur_gs":
                 await stop_deblur_gs_service(client_id=client_id)
 
-    except WebSocketDisconnect:
+    except Exception:
         await analyzer_manager.disconnect(client_id)

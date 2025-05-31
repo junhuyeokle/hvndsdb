@@ -21,6 +21,11 @@ async def start_service(
         dto.colmap_url, os.path.join(TEMP, "colmap")
     )
 
+    if dto.deblur_gs_url is not None:
+        await download_folder_from_presigned_url(
+            dto.deblur_gs_url, os.path.join(TEMP, "deblur_gs")
+        )
+
     train_task = asyncio.create_task(
         train_worker.run(
             response_queue,
@@ -64,5 +69,5 @@ async def ply_url_service(
     ply_url_condition: asyncio.Condition, shared_data: dict, dto: PLYUrlDTO
 ):
     async with ply_url_condition:
-        ply_url_condition.notify()
         shared_data["ply_url"] = dto.ply_url
+        ply_url_condition.notify_all()

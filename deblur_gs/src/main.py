@@ -5,7 +5,7 @@ import time
 import websockets
 import asyncio
 
-from envs import SERVER_URL, VISDOM_HOST, VISDOM_PORT, WS_KEY
+from envs import SERVER_URL, TEMP, VISDOM_HOST, VISDOM_PORT, WS_KEY
 from service import ply_url_service, start_service, stop_service, upload_service
 from dto import BaseWebSocketDTO, PLYUrlDTO, StartDeblurGSDTO, UploadDeblurGSDTO
 from utils import (
@@ -22,8 +22,6 @@ async def watcher(
     shared_data: dict,
     interval: float = 5.0,
 ):
-    base_path = os.path.abspath(base_path)
-
     while True:
         last_folder = get_last_point_cloud(base_path)
 
@@ -31,11 +29,9 @@ async def watcher(
             ply_file = os.path.join(last_folder, "point_cloud.ply")
             if os.path.exists(ply_file):
                 await sender_queue.put(
-                    BaseWebSocketDTO[None](
-                        type="update_progress",
-                        data={"progress": "Uploading point cloud..."},
-                    ).json()
+                    BaseWebSocketDTO[None](type="ply_url", data=None).json()
                 )
+                print(f"Found PLY file: {ply_file}")
 
                 async with ply_url_condition:
                     await ply_url_condition.wait()
@@ -44,13 +40,7 @@ async def watcher(
                     shared_data["ply_url"], ply_file, "application/octet-stream"
                 )
 
-            for name in os.listdir(base_path):
-                full_path = os.path.join(base_path, name)
-                if os.path.isdir(full_path) and full_path != last_folder:
-                    shutil.rmtree(full_path)
-                    print(f"Deleted: {full_path}")
-        else:
-            print("No valid folders found.")
+            shutil.rmtree(base_path)
 
         await asyncio.sleep(interval)
 
@@ -67,9 +57,7 @@ async def handler(
         )
 
     elif dto.type == "stop":
-        await stop_service(
-            response_queue, UploadDeblurGSDTO.parse_obj(dto.data), shared_data
-        )
+        await stop_service(response_queue, shared_data)
 
     elif dto.type == "upload":
         await upload_service(
@@ -128,7 +116,7 @@ async def client():
             sender_task = asyncio.create_task(sender(websocket, response_queue))
             watcher_task = asyncio.create_task(
                 watcher(
-                    os.path.join("temp", "deblur_gs"),
+                    os.path.join(TEMP, "deblur_gs", "point_cloud"),
                     response_queue,
                     ply_url_condition,
                     shared_data,

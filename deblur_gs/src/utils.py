@@ -18,26 +18,26 @@ async def download_folder_from_presigned_url(url: str, path: str):
 
     zip_path = os.path.join(TEMP, "temp.zip")
 
-    print(f"Downloading from {url} to {zip_path}")
+    print(f"Downloading\nFrom: {url}\nTo: {zip_path}")
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             if response.status != 200:
-                print(f"Download failed: {response.status}")
+                print(f"Download failed")
                 return
             with open(zip_path, "wb") as f:
                 f.write(await response.read())
-            print(f"Downloaded to: {zip_path}")
+            print(f"Download succeeded")
 
     with zipfile.ZipFile(zip_path, "r") as zip_ref:
         zip_ref.extractall(path)
-        print(f"Extracted to: {path}")
+        print(f"Extracted\nTo: {path}")
 
     os.remove(zip_path)
 
 
 async def upload_folder_to_presigned_url(url: str, path: str):
-    print(f"Uploading folder {path} to {url}")
+    print(f"Uploading\nFolder: {path}\nTo: {url}")
 
     zip_path = os.path.join(TEMP, "temp.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
@@ -46,7 +46,7 @@ async def upload_folder_to_presigned_url(url: str, path: str):
                 full_path = os.path.join(root, file)
                 rel_path = os.path.relpath(full_path, path)
                 zipf.write(full_path, rel_path)
-        print(f"Created zip file: {zip_path}")
+        print(f"Created zip file\nTo: {zip_path}")
 
     async with aiohttp.ClientSession() as session:
         with open(zip_path, "rb") as f:
@@ -55,13 +55,13 @@ async def upload_folder_to_presigned_url(url: str, path: str):
             )
             if response.status != 200:
                 raise Exception(f"Upload failed: {await response.text()}")
-        print(f"Uploaded {zip_path} to {url}")
+        print(f"Upload succeeded")
 
     os.remove(zip_path)
 
 
 async def upload_file_to_presigned_url(url: str, path: str, content_type: str):
-    print(f"Uploading file {path} to {url}")
+    print(f"Uploading\nFile: {path}\nTo: {url}")
 
     async with aiohttp.ClientSession() as session:
         with open(path, "rb") as f:
@@ -97,7 +97,7 @@ def get_last_point_cloud(base_path: str):
         return None
 
 
-def get_last_checkpoint(folder_path: str) -> int | None:
+def get_last_checkpoint(folder_path: str):
     try:
         pattern = re.compile(r"^chkpnt(\d+)\.pth$")
         numbers = []

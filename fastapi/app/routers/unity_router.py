@@ -33,5 +33,5 @@ async def unity_route(websocket: WebSocket):
             raw = await websocket.receive_text()
             dto = BaseWebSocketDTO(**json.loads(raw))
 
-    except WebSocketDisconnect:
+    except Exception:
         await unity_manager.disconnect(client_id)

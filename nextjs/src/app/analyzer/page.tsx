@@ -63,7 +63,6 @@ export default function AnalyzerPage() {
 
   const handleStop = () => {
     sendMessage({ type: "stop_deblur_gs", data: null });
-    ws.current?.close();
   };
 
   useEffect(() => {

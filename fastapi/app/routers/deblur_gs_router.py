@@ -1,5 +1,5 @@
 import json
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket
 
 from utils.authorization import is_valid_timestamp, verify_hmac
 from dtos.base_dto import BaseWebSocketDTO
@@ -52,5 +52,5 @@ async def deblur_gs_route(websocket: WebSocket):
             if dto.type == "stop_complete":
                 await stop_complete_service(client_id=client_id)
 
-    except WebSocketDisconnect:
+    except Exception:
         await deblur_gs_manager.disconnect(client_id)

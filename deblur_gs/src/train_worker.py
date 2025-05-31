@@ -1,4 +1,5 @@
 import asyncio
+import os
 import subprocess
 
 from envs import VISDOM_HOST, VISDOM_PORT
@@ -39,9 +40,14 @@ async def run(
         str(VISDOM_PORT),
     ]
 
-    start_checkpoint = get_last_checkpoint()
+    print(" ".join(cmd))
+
+    start_checkpoint = get_last_checkpoint(deblur_gs_path)
     if start_checkpoint is not None:
-        cmd += ["--start_checkpoint", str(start_checkpoint)]
+        cmd += [
+            "--start_checkpoint",
+            os.path.join(deblur_gs_path, f"chkpnt{start_checkpoint}.pth"),
+        ]
 
     cmd += [
         "--save_iterations",
