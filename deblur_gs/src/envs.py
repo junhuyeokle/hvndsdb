@@ -12,3 +12,6 @@ WS_KEY = os.getenv("WS_KEY")
 
 TEMP = os.path.abspath(os.path.join(os.path.dirname(__file__), "../temp"))
 SERVER_URL = f"ws://{FASTAPI_HOST}:{FASTAPI_PORT}/ws/deblur_gs"
+
+VISDOM_PORT = 8097
+VISDOM_HOST = "127.0.0.1"

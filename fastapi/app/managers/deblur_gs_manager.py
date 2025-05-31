@@ -1,7 +1,7 @@
 import asyncio
 from typing import List, Optional
 from dtos.base_dto import BaseWebSocketDTO
-from dtos.deblur_gs_dto import StartDeblurGSDTO, UpdateDeblurGSProgressDTO
+from dtos.deblur_gs_dto import StartDeblurGSDTO
 from managers.web_socket_manager import WebSocketManager
 from s3 import get_presigned_download_url
 
@@ -99,3 +99,12 @@ class DeblurGSManager(WebSocketManager):
             )
 
         return self.building_progress[building_id][-1]
+
+    async def stop(self, building_id: str):
+        await self.send(
+            self.building_to_client[building_id],
+            BaseWebSocketDTO[None](type="stop", data=None).json(),
+        )
+
+
+deblur_gs_manager = DeblurGSManager()

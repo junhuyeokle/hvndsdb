@@ -4,17 +4,16 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from authorization import is_valid_timestamp, verify_hmac
 from dtos.base_dto import BaseWebSocketDTO
 from dtos.deblur_gs_dto import UpdateDeblurGSProgressDTO
-from managers.deblur_gs_manager import DeblurGSManager
+from managers.deblur_gs_manager import deblur_gs_manager
 from services.deblur_gs_service import (
     complete_service,
     ply_url_service,
+    stop_complete_service,
     update_progress_service,
     upload_complete_service,
 )
 
 deblur_gs_router = APIRouter()
-
-deblur_gs_manager = DeblurGSManager()
 
 
 @deblur_gs_router.websocket("")
@@ -40,24 +39,18 @@ async def deblur_gs_route(websocket: WebSocket):
             raw = await websocket.receive_text()
             dto = BaseWebSocketDTO(**json.loads(raw))
             if dto.type == "complete":
-                await complete_service(
-                    client_id=client_id, manager=deblur_gs_manager
-                )
+                await complete_service(client_id=client_id)
             if dto.type == "upload_complete":
-                upload_complete_service(
-                    client_id=client_id, manager=deblur_gs_manager
-                )
+                upload_complete_service(client_id=client_id)
             if dto.type == "update_progress":
                 update_progress_service(
                     client_id=client_id,
                     dto=UpdateDeblurGSProgressDTO.model_validate(dto.data),
-                    manager=deblur_gs_manager,
                 )
-
             if dto.type == "ply_url":
-                await ply_url_service(
-                    client_id=client_id, manager=deblur_gs_manager
-                )
+                await ply_url_service(client_id=client_id)
+            if dto.type == "stop_complete":
+                await stop_complete_service(client_id=client_id)
 
     except WebSocketDisconnect:
         await deblur_gs_manager.disconnect(client_id)

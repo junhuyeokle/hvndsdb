@@ -4,17 +4,19 @@ from dtos.deblur_gs_dto import (
     UpdateDeblurGSProgressDTO,
     UploadDeblurGSDTO,
 )
+from managers.deblur_gs_manager import deblur_gs_manager
 from s3 import get_presigned_upload_url
 
 
-async def complete_service(client_id: str, manager):
-    await manager.send(
+async def complete_service(client_id: str):
+    await deblur_gs_manager.send(
         client_id,
         BaseWebSocketDTO[UploadDeblurGSDTO](
             type="upload",
             data=UploadDeblurGSDTO(
                 deblur_gs_url=get_presigned_upload_url(
-                    manager.client_to_building[client_id] + "/deblur_gs.zip",
+                    deblur_gs_manager.client_to_building[client_id]
+                    + "/deblur_gs.zip",
                     "application/zip",
                 ),
             ),
@@ -22,29 +24,44 @@ async def complete_service(client_id: str, manager):
     )
 
 
-def upload_complete_service(client_id: str, manager):
-    manager.complete(client_id=client_id)
+def upload_complete_service(client_id: str):
+    deblur_gs_manager.complete(client_id=client_id)
 
 
-def update_progress_service(
-    client_id: str, dto: UpdateDeblurGSProgressDTO, manager
-):
-    manager.update_progress(
+def update_progress_service(client_id: str, dto: UpdateDeblurGSProgressDTO):
+    deblur_gs_manager.update_progress(
         client_id=client_id,
         progress=dto.progress,
     )
 
 
-async def ply_url_service(client_id: str, manager):
-    await manager.send(
+async def ply_url_service(client_id: str):
+    await deblur_gs_manager.send(
         client_id,
         BaseWebSocketDTO[PLYUrlDTO](
             type="ply_url",
             data=PLYUrlDTO(
                 ply_url=get_presigned_upload_url(
-                    manager.client_to_building[client_id] + "/point_cloud.ply",
+                    deblur_gs_manager.client_to_building[client_id]
+                    + "/point_cloud.ply",
                     "application/octet-stream",
                 )
+            ),
+        ),
+    )
+
+
+async def stop_complete_service(client_id: str):
+    await deblur_gs_manager.send(
+        client_id,
+        BaseWebSocketDTO[UploadDeblurGSDTO](
+            type="upload",
+            data=UploadDeblurGSDTO(
+                deblur_gs_url=get_presigned_upload_url(
+                    deblur_gs_manager.client_to_building[client_id]
+                    + "/deblur_gs.zip",
+                    "application/zip",
+                ),
             ),
         ),
     )

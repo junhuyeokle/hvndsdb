@@ -1,12 +1,12 @@
 import os
 import shutil
+import subprocess
 import time
-import uuid
 import websockets
 import asyncio
 
-from envs import SERVER_URL, WS_KEY
-from service import ply_url_service, start_service, upload_service
+from envs import SERVER_URL, VISDOM_HOST, VISDOM_PORT, WS_KEY
+from service import ply_url_service, start_service, stop_service, upload_service
 from dto import BaseWebSocketDTO, PLYUrlDTO, StartDeblurGSDTO, UploadDeblurGSDTO
 from utils import (
     generate_hmac_signature,
@@ -63,8 +63,11 @@ async def handler(
 ):
     if dto.type == "start":
         await start_service(
-            response_queue, StartDeblurGSDTO.parse_obj(dto.data)
+            response_queue, StartDeblurGSDTO.parse_obj(dto.data), shared_data
         )
+
+    elif dto.type == "stop":
+        await stop_service(response_queue, UploadDeblurGSDTO.parse_obj(dto.data), shared_data)
 
     elif dto.type == "upload":
         await upload_service(
@@ -89,6 +92,25 @@ async def sender(websocket, response_queue: asyncio.Queue):
 
 
 async def client():
+    try:
+        subprocess.Popen(
+            [
+                "python",
+                "-m",
+                "visdom.server",
+                "-p",
+                str(VISDOM_PORT),
+                "--host",
+                VISDOM_HOST,
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        print(f"Visdom server started at http://{VISDOM_HOST}:{VISDOM_PORT}")
+    except Exception as e:
+        print(f"Failed to start Visdom server: {e}")
+        return
+
     response_queue = asyncio.Queue()
     ply_url_condition = asyncio.Condition()
     shared_data = {}

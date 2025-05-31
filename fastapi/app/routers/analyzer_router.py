@@ -1,14 +1,29 @@
-from fastapi import APIRouter
-from dtos.base_dto import BaseResponseDTO
-from services.analyzer_service import start_analyzer_service
+import json
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
+from dtos.analyzer_dto import StartAnalyzerDTO
+from dtos.base_dto import BaseWebSocketDTO
+from managers.analyzer_manager import analyzer_manager
+from services.analyzer_service import start_service, stop_service
 
 analyzer_router = APIRouter()
 
 
-@analyzer_router.post(
-    "/{building_id}/start", response_model=BaseResponseDTO[None]
-)
-async def start_analyzer_route(
-    building_id: str,
-):
-    return await start_analyzer_service(building_id)
+@analyzer_router.websocket("")
+async def analyzer_route(websocket: WebSocket):
+    client_id = websocket.client.host
+    await analyzer_manager.accept(client_id, websocket)
+
+    try:
+        while True:
+            raw = await websocket.receive_text()
+            dto = BaseWebSocketDTO(**json.loads(raw))
+            if dto.type == "start":
+                await start_service(
+                    client_id, StartAnalyzerDTO.model_validate(dto.data)
+                )
+            if dto.type == "stop":
+                await stop_service(client_id=client_id)
+
+    except WebSocketDisconnect:
+        await analyzer_manager.disconnect(client_id)

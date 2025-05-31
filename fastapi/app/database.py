@@ -7,11 +7,8 @@ from envs import (
     MYSQL_PORT,
     MYSQL_USER,
 )
-from tenacity import retry, wait_fixed, stop_after_attempt, before_log
-import logging
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+from tenacity import retry, wait_fixed, stop_after_attempt
+from fastapi.logger import logger
 
 MYSQL_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
 
@@ -19,7 +16,6 @@ MYSQL_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_
 @retry(
     stop=stop_after_attempt(20),
     wait=wait_fixed(5),
-    before=before_log(logger, logging.INFO),
 )
 def get_engine():
     engine = create_engine(

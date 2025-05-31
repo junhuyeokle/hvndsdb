@@ -1,41 +1,21 @@
 import asyncio
 import subprocess
 
+from envs import VISDOM_HOST, VISDOM_PORT
 from utils import get_last_checkpoint
 from dto import UpdateDeblurGSProgressDTO, BaseWebSocketDTO
 
-ITERATION = 100
+ITERATION = 10000
 SAVE_POINT_CLOUD_INTERVAL = 50
 SAVE_CHECKPOINT_INTERVAL = 100
-
-VISDOM_PORT = 8097
-VISDOM_HOST = "127.0.0.1"
-
 
 async def run(
     send_queue: asyncio.Queue,
     colmap_path: str,
     frames_path: str,
     deblur_gs_path: str,
+    iteration: int = ITERATION,
 ):
-    try:
-        subprocess.Popen(
-            [
-                "python",
-                "-m",
-                "visdom.server",
-                "-p",
-                str(VISDOM_PORT),
-                "--host",
-                VISDOM_HOST,
-            ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        print(f"Visdom server started at http://{VISDOM_HOST}:{VISDOM_PORT}")
-    except Exception as e:
-        print(f"Failed to start Visdom server: {e}")
-
     cmd = [
         "python",
         "-u",
@@ -48,11 +28,7 @@ async def run(
         "-i",
         frames_path,
         "--iterations",
-        str(ITERATION),
-        "--save_iterations",
-        *[str(i) for i in range(0, ITERATION + 1, SAVE_POINT_CLOUD_INTERVAL)],
-        "--checkpoint_iterations",
-        *[str(i) for i in range(0, ITERATION + 1, SAVE_CHECKPOINT_INTERVAL)],
+        str(iteration),
         "--test_iterations",
         "-1",
         "--deblur",
@@ -66,7 +42,17 @@ async def run(
     if start_checkpoint is not None:
         cmd += ["--start_checkpoint", str(start_checkpoint)]
 
-    print("Running command:", " ".join(cmd))
+    cmd += [
+        "--save_iterations",
+        *[str(i) for i in range(0 if start_checkpoint is None else start_checkpoint, iteration + 1, SAVE_POINT_CLOUD_INTERVAL)]
+    ]
+
+    cmd += [
+        "--checkpoint_iterations",
+        *[str(i) for i in range(0 if start_checkpoint is None else start_checkpoint, iteration + 1, SAVE_CHECKPOINT_INTERVAL)],
+    ]
+
+    print(" ".join(cmd))
 
     loop = asyncio.get_running_loop()
 
@@ -79,21 +65,34 @@ async def run(
             bufsize=1,
         )
 
-    process = await loop.run_in_executor(None, launch_process)
+    process = None
 
-    while process.poll() is None:
-        line = await loop.run_in_executor(None, process.stdout.readline)
-        if not line:
-            continue
-        line = line.strip()
-        print(line)
+    try:
+        process = await loop.run_in_executor(None, launch_process)
+
+        while process.poll() is None:
+            line = await loop.run_in_executor(None, process.stdout.readline)
+            line = line.strip()
+            print(line)
+            await send_queue.put(
+                BaseWebSocketDTO[UpdateDeblurGSProgressDTO](
+                    type="update_progress",
+                    data=UpdateDeblurGSProgressDTO(progress=line),
+                ).json()
+            )
+
         await send_queue.put(
-            BaseWebSocketDTO[UpdateDeblurGSProgressDTO](
-                type="update_progress",
-                data=UpdateDeblurGSProgressDTO(progress=line),
-            ).json()
+            BaseWebSocketDTO[None](type="complete", data=None).json()
         )
+    except asyncio.CancelledError as _:
+        print("Train worker cancelled")
+        if process and process.poll() is None:
+            process.terminate()
+            try:
+                await loop.run_in_executor(None, lambda: process.wait(timeout=5))
+            except subprocess.TimeoutExpired:
+                print("Killing process due to timeout")
+                process.kill()
+                await loop.run_in_executor(None, process.wait)
 
-    await send_queue.put(
-        BaseWebSocketDTO[None](type="complete", data=None).json()
-    )
+    print("Train worker finished")

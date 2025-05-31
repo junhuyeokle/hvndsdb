@@ -1,15 +1,14 @@
 import sys
-from analyzer.colmap import (
-    extract_features,
-    match_sequential,
-    incremental_mapping,
-)
+from analyzer.utils import extract_frames
+from fastapi.logger import logger
 
 
-async def run(logger, colmap_path: str, frames_path: str):
+async def run(sample_path: str, frames_path: str):
     import asyncio
 
-    args = ["python", __file__, colmap_path, frames_path]
+    args = ["python", __file__, sample_path, frames_path]
+
+    logger.info("Starting COLMAP worker with args: %s", " ".join(args))
 
     process = await asyncio.create_subprocess_exec(
         *args,
@@ -26,15 +25,15 @@ async def run(logger, colmap_path: str, frames_path: str):
         logger.info(line.decode().strip())
 
     result = await process.wait()
-    logger.info("Colmap worker finished.")
+    logger.info("Frames worker finished.")
 
     return result == 0
 
 
 if __name__ == "__main__":
-    colmap_path = sys.argv[1]
+    sample_path = sys.argv[1]
     frames_path = sys.argv[2]
 
-    extract_features(colmap_path, frames_path)
-    match_sequential(colmap_path, overlap=500)
-    incremental_mapping(colmap_path, frames_path)
+    print(f"Extracting frames from {sample_path} to {frames_path}")
+    extract_frames(sample_path, frames_path)
+    print(f"Frames extracted to {frames_path}")

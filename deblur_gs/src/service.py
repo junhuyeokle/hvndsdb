@@ -10,7 +10,7 @@ from utils import (
 )
 
 
-async def start_service(response_queue: asyncio.Queue, dto: StartDeblurGSDTO):
+async def start_service(response_queue: asyncio.Queue, dto: StartDeblurGSDTO, shared_data: dict):
     await download_folder_from_presigned_url(
         dto.frames_url, os.path.join(TEMP, "frames")
     )
@@ -19,13 +19,29 @@ async def start_service(response_queue: asyncio.Queue, dto: StartDeblurGSDTO):
         dto.colmap_url, os.path.join(TEMP, "colmap")
     )
 
-    asyncio.create_task(
+    train_task = asyncio.create_task(
         train_worker.run(
             response_queue,
             os.path.join(TEMP, "colmap"),
             os.path.join(TEMP, "frames"),
             os.path.join(TEMP, "deblur_gs"),
         )
+    )
+
+    shared_data["train_task"] = train_task
+
+
+async def stop_service(response_queue: asyncio.Queue, shared_data: dict):
+    train_task = shared_data.get("train_task")
+    if train_task:
+        train_task.cancel()
+        try:
+            await train_task
+        except asyncio.CancelledError:
+            pass
+
+    await response_queue.put(
+        BaseWebSocketDTO[None](type="stop_complete", data=None).json()
     )
 
 

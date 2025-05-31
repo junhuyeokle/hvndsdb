@@ -3,12 +3,10 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from authorization import is_valid_timestamp, verify_hmac
 from dtos.base_dto import BaseWebSocketDTO
-from managers.unity_manager import UnityManager
+from managers.unity_manager import unity_manager
 
 
 unity_router = APIRouter()
-
-unity_manager = UnityManager()
 
 
 @unity_router.websocket("/")
