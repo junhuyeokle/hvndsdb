@@ -107,6 +107,3 @@ class DeblurGSManager(WebSocketManager):
             client_id,
             BaseWebSocketDTO[None](type="stop", data=None),
         )
-
-
-deblur_gs_manager = DeblurGSManager()

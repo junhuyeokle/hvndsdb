@@ -20,7 +20,8 @@ namespace Visualizer
         {
             BuildingId = buildingId;
             
-            _path = Config.DataPath + @"\" + BuildingId + @"\deblur_gs\output.ply";
+            // _path = Config.DataPath + @"\" + BuildingId + @"\deblur_gs\output.ply";
+            _path = @"C:\Users\kyoun\Downloads\point_cloud.ply";
             
             InitAsset();
 

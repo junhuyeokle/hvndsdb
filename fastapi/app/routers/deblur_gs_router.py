@@ -5,7 +5,7 @@ from fastapi.logger import logger
 from utils.authorization import is_valid_timestamp, verify_hmac
 from dtos.base_dto import BaseWebSocketDTO
 from dtos.deblur_gs_dto import UpdateDeblurGSProgressDTO
-from managers.deblur_gs_manager import deblur_gs_manager
+from managers import deblur_gs_manager
 from services.deblur_gs_service import (
     complete_service,
     ply_url_service,
@@ -32,13 +32,13 @@ async def deblur_gs_route(websocket: WebSocket):
         await websocket.close(code=4003)
         return
 
-    client_id = websocket.client.host
+    client_id = "deblur_gs:" + websocket.client.host
     await deblur_gs_manager.accept(client_id, websocket)
 
     try:
         while True:
             dto = BaseWebSocketDTO(**json.loads(await websocket.receive_text()))
-            logger.info(f"Received\n{dto}")
+            logger.info(f"Received {client_id}\n{dto}")
             if dto.type == "complete":
                 await complete_service(client_id=client_id)
             if dto.type == "upload_complete":

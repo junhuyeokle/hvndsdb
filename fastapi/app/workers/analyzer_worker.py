@@ -2,8 +2,8 @@ import os
 
 from fastapi.logger import logger
 from utils.envs import TEMP
-from managers.deblur_gs_manager import deblur_gs_manager
-from managers.analyzer_manager import analyzer_manager
+from managers import deblur_gs_manager
+from managers import analyzer_manager
 from utils.s3 import (
     download_file_from_presigned_url,
     download_folder_from_presigned_url,
@@ -12,10 +12,12 @@ from utils.s3 import (
     is_key_exists,
     upload_folder_to_presigned_url,
 )
-from workers import colmap, frames
+from workers import colmap_worker, frames_worker
 
 
-async def run(building_id: str):
+async def run(client_id: str):
+    building_id = analyzer_manager.get_shared_data(client_id).get("building_id")
+
     FRAMES = not is_key_exists(os.path.join(building_id, "frames.zip"))
     COLMAP = not is_key_exists(os.path.join(building_id, "colmap.zip"))
 
@@ -35,15 +37,12 @@ async def run(building_id: str):
     )
 
     if FRAMES:
-        logger.info("Downloading sample...")
         await download_file_from_presigned_url(
             get_presigned_download_url(os.path.join(building_id, "sample.mp4")),
             sample_path,
         )
 
-        logger.info("Extracting frames...")
-        if await frames.run(sample_path, frames_path):
-            logger.info("Uploading frames...")
+        if not await frames_worker.run(sample_path, frames_path, client_id):
             await upload_folder_to_presigned_url(
                 get_presigned_upload_url(
                     os.path.join(building_id, "frames.zip"),
@@ -52,12 +51,13 @@ async def run(building_id: str):
                 frames_path,
             )
         else:
-            logger.error("Frame extraction failed.")
+            await analyzer_manager.update_progress(
+                client_id, "Frames extraction failed."
+            )
             return
 
     if COLMAP:
         if not FRAMES:
-            logger.info("Downloading frames...")
             await download_folder_from_presigned_url(
                 get_presigned_download_url(
                     os.path.join(building_id, "frames.zip")
@@ -65,9 +65,7 @@ async def run(building_id: str):
                 frames_path,
             )
 
-        logger.info("Extracting COLMAP data...")
-        if await colmap.run(colmap_path, frames_path):
-            logger.info("Uploading COLMAP data...")
+        if not await colmap_worker.run(colmap_path, frames_path, client_id):
             await upload_folder_to_presigned_url(
                 get_presigned_upload_url(
                     os.path.join(building_id, "colmap.zip"),
@@ -76,16 +74,17 @@ async def run(building_id: str):
                 colmap_path,
             )
         else:
-            logger.error("COLMAP extraction failed.")
+            await analyzer_manager.update_progress(
+                client_id, "COLMAP extraction failed."
+            )
             return
 
-    logger.info("Starting Deblur GS...")
     await deblur_gs_manager.start(building_id)
 
     try:
         while True:
             await analyzer_manager.update_progress(
-                analyzer_manager.building_to_client[building_id],
+                client_id,
                 await deblur_gs_manager.get_progress(
                     deblur_gs_manager.building_to_client[building_id]
                 ),

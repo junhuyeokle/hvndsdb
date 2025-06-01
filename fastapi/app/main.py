@@ -24,10 +24,7 @@ logger.setLevel(logging.INFO)
 
 if not logger.hasHandlers():
     handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        fmt="%(asctime)s %(levelname)s %(name)s.%(funcName)s:%(lineno)d\n%(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+    formatter = logging.Formatter("%(message)s")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 

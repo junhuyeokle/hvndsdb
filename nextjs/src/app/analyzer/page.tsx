@@ -8,17 +8,24 @@ type StartData = { building_id: string };
 
 type ClientMessage =
   | { type: "start"; data: StartData }
-  | { type: "stop_deblur_gs"; data: null };
+  | { type: "stop_deblur_gs"; data: null }
+  | { type: "progress"; data: null };
 
 type ServerMessage =
-  | { type: "status"; data: { message: string } }
-  | { type: "result"; data: Record<string, unknown> }
-  | { type: string; data: unknown };
+  | { type: "progress"; data: string }
+  | { type: string; data: null };
 
 export default function AnalyzerPage() {
   const [buildingId, setBuildingId] = useState<string>("");
   const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [progressLog, setProgressLog] = useState<string[]>([]);
   const ws = useRef<WebSocket | null>(null);
+  const logRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    }
+  }, [progressLog]);
 
   const sendMessage = (message: ClientMessage) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
@@ -40,16 +47,22 @@ export default function AnalyzerPage() {
       console.log("WebSocket connected");
       setIsConnected(true);
 
-      sendMessage({
-        type: "start",
-        data: { building_id: buildingId },
-      });
+      sendMessage({ type: "start", data: { building_id: buildingId } });
     };
 
     ws.current.onmessage = (event: MessageEvent<string>) => {
       try {
         const message: ServerMessage = JSON.parse(event.data);
-        console.log("서버로부터 수신됨:", message);
+        switch (message.type) {
+          case "progress":
+            if (typeof message.data === "string") {
+              setProgressLog((prev) => [...prev, message.data]);
+            }
+            break;
+
+          default:
+            console.warn("알 수 없는 타입 수신:", message);
+        }
       } catch {
         console.error("잘못된 JSON 수신:", event.data);
       }
@@ -103,6 +116,15 @@ export default function AnalyzerPage() {
 
       <div className="text-sm text-gray-500">
         현재 상태: {isConnected ? "연결됨" : "연결 안 됨"}
+      </div>
+
+      <div
+        ref={logRef}
+        className="mt-4 p-4 bg-black text-green-400 font-mono text-sm h-96 overflow-auto whitespace-pre-wrap rounded-md shadow-inner"
+      >
+        {progressLog.map((line, idx) => (
+          <div key={idx}>{line}</div>
+        ))}
       </div>
     </div>
   );

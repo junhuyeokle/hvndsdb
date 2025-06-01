@@ -40,7 +40,7 @@ class WebSocketManager:
             shared_data[key] = value
 
     async def send(self, client_id: str, dto: BaseWebSocketDTO):
-        logger.info(f"Sending\nTo: {client_id}\n{dto}")
+        logger.info(f"Sending {client_id}\n{dto}")
         websocket = self.get_web_socket(client_id)
         if websocket:
             await websocket.send_json(dto.model_dump(mode="json"))

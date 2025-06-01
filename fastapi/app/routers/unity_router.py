@@ -4,7 +4,7 @@ from fastapi.logger import logger
 
 from utils.authorization import is_valid_timestamp, verify_hmac
 from dtos.base_dto import BaseWebSocketDTO
-from managers.unity_manager import unity_manager
+from managers import unity_manager
 
 
 unity_router = APIRouter()
@@ -25,13 +25,13 @@ async def unity_route(websocket: WebSocket):
         await websocket.close(code=4003)
         return
 
-    client_id = websocket.client.host
+    client_id = "unity:" + websocket.client.host
     await unity_manager.accept(client_id, websocket)
 
     try:
         while True:
             dto = BaseWebSocketDTO(**json.loads(await websocket.receive_text()))
-            logger.info(f"Received\n{dto}")
+            logger.info(f"Received {client_id}\n{dto}")
 
     except Exception:
         await unity_manager.disconnect(client_id)

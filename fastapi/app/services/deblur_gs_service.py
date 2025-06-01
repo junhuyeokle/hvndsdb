@@ -4,7 +4,7 @@ from dtos.deblur_gs_dto import (
     UpdateDeblurGSProgressDTO,
     UploadDeblurGSDTO,
 )
-from managers.deblur_gs_manager import deblur_gs_manager
+from managers import deblur_gs_manager
 from utils.s3 import get_presigned_upload_url
 
 
