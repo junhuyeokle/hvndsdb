@@ -1,5 +1,5 @@
 import json
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket
 
 from dtos.analyzer_dto import StartAnalyzerDTO
 from dtos.base_dto import BaseWebSocketDTO

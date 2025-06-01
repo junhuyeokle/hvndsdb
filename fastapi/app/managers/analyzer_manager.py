@@ -9,56 +9,78 @@ class AnalyzerManager(WebSocketManager):
     def __init__(self):
         super().__init__()
         self.building_to_client: dict[str, str] = {}
-        self.client_to_building: dict[str, str] = {}
-        self.client_to_task: dict[str, Task] = {}
-        self.building_to_task: dict[str, Task] = {}
 
-    async def start(
-        self,
-        building_id: str,
-        client_id: str,
-    ):
+    async def start(self, building_id: str, client_id: str):
         if building_id in self.building_to_client:
             raise ValueError(
                 f"Building {building_id} is already associated with a client."
             )
 
-        if client_id in self.client_to_building:
+        if "building_id" in self.get_shared_data(client_id):
             raise ValueError(
                 f"Client {client_id} is already associated with a building."
             )
 
+        self.set_shared_data(client_id, "building_id", building_id)
+
         self.building_to_client[building_id] = client_id
-        self.client_to_building[client_id] = building_id
 
-        self.client_to_task[client_id] = asyncio.create_task(
-            analyzer.run(building_id=building_id)
-        )
-        self.building_to_task[building_id] = self.client_to_task[client_id]
+        progress_queue = asyncio.Queue()
+        task = asyncio.create_task(analyzer.run(building_id=building_id))
 
-    async def stop_deblur_gs(
-        self,
-        client_id: str,
-    ):
-        await deblur_gs_manager.stop(
-            building_id=self.client_to_building[client_id]
+        self.set_shared_data(client_id, "task", task)
+        self.set_shared_data(client_id, "progress_queue", progress_queue)
+
+    async def stop_deblur_gs(self, client_id: str):
+        building_id = self.get_shared_data(client_id).get("building_id")
+        if not building_id:
+            raise LookupError(f"Client {client_id} has no associated building.")
+        await deblur_gs_manager.stop(building_id=building_id)
+
+    async def update_progress(self, client_id: str, progress: str):
+        queue: asyncio.Queue = self.get_shared_data(client_id).get(
+            "progress_queue"
         )
+        if not queue:
+            raise LookupError(f"Client {client_id} has no progress queue.")
+
+        await queue.put(progress)
+
+    async def get_progress(self, building_id: str):
+        if building_id not in self.building_to_client:
+            raise LookupError(
+                f"Building {building_id} is not associated with any client."
+            )
+
+        client_id = self.building_to_client[building_id]
+        queue: asyncio.Queue = self.get_shared_data(client_id).get(
+            "progress_queue"
+        )
+
+        if not queue:
+            raise LookupError(f"Client {client_id} has no progress queue.")
+
+        progress = await queue.get()
+
+        if progress == "__COMPLETE__":
+            raise StopAsyncIteration
 
     async def disconnect(self, client_id: str):
+        shared = self.get_shared_data(client_id)
+        building_id = shared.get("building_id")
+        task: Task = shared.get("task")
+
+        if task:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+        if building_id:
+            self.building_to_client.pop(building_id, None)
+
         await super().disconnect(client_id)
-
-        self.client_to_task[client_id].cancel()
-        try:
-            await self.client_to_task[client_id]
-        except asyncio.CancelledError:
-            pass
-
-        self.building_to_task.pop(self.client_to_building[client_id], None)
-        self.client_to_task.pop(client_id, None)
-
-        self.building_to_client.pop(
-            self.client_to_building.pop(client_id, None), None
-        )
 
 
 analyzer_manager = AnalyzerManager()

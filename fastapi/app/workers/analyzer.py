@@ -79,9 +79,13 @@ async def run(building_id: str):
             return
 
     logger.info("Starting Deblur GS...")
-    await deblur_gs_manager.start(building_id=building_id)
+    await deblur_gs_manager.start(building_id)
 
-    while building_id in deblur_gs_manager.building_to_client:
-        logger.info(await deblur_gs_manager.get_progress(building_id))
+    try:
+        while True:
+            progress = await deblur_gs_manager.get_progress(building_id)
+            logger.info(progress)
+    except StopAsyncIteration:
+        pass
 
     logger.info("Analyzer worker finished.")

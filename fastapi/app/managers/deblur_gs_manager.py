@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import List, Optional
+from typing import Optional
 from dtos.base_dto import BaseWebSocketDTO
 from dtos.deblur_gs_dto import StartDeblurGSDTO
 from managers.web_socket_manager import WebSocketManager
@@ -11,32 +11,27 @@ class DeblurGSManager(WebSocketManager):
     def __init__(self):
         super().__init__()
         self.building_to_client: dict[str, str] = {}
-        self.client_to_building: dict[str, str] = {}
-        self.building_progress: dict[str, List[str]] = {}
-        self.building_progress_conditions: dict[str, asyncio.Condition] = {}
 
-    async def start(
-        self,
-        building_id: str,
-        client_id: Optional[str] = None,
-    ):
+    async def start(self, building_id: str, client_id: Optional[str] = None):
         if not client_id:
-            if not self.active_connections:
-                raise ValueError("No client connected to start deblur GS.")
-            client_id = next(iter(self.active_connections))
+            if not self.connections:
+                raise RuntimeError("No client connected to start deblur GS.")
+            client_id = next(iter(self.connections))
 
         if building_id in self.building_to_client:
             raise ValueError(
                 f"Building {building_id} is already associated with a client."
             )
 
-        if client_id in self.client_to_building:
+        if "building_id" in self.get_shared_data(client_id):
             raise ValueError(
                 f"Client {client_id} is already associated with a building."
             )
 
+        self.set_shared_data(client_id, "building_id", building_id)
+        self.set_shared_data(client_id, "progress_queue", asyncio.Queue())
+
         self.building_to_client[building_id] = client_id
-        self.client_to_building[client_id] = building_id
 
         await self.send(
             client_id,
@@ -63,56 +58,62 @@ class DeblurGSManager(WebSocketManager):
         )
 
     async def complete(self, client_id: str):
-        building_id = self.client_to_building.pop(client_id, None)
-        self.building_to_client.pop(building_id, None)
+        shared = self.get_shared_data(client_id)
+        building_id = shared.pop("building_id", None)
+        progress_queue = shared.pop("progress_queue", None)
 
-        cond = self.building_progress_conditions.setdefault(
-            building_id, asyncio.Condition()
-        )
-
-        async with cond:
-            cond.notify_all()
-
-    async def disconnect(self, client_id: str):
-        await super().disconnect(client_id)
-
-        await self.complete(client_id)
-
-    async def update_progress(
-        self,
-        client_id: str,
-        progress: str,
-    ):
-        if client_id not in self.client_to_building:
-            raise ValueError(
-                f"Client {client_id} is not associated with any building."
+        if not building_id or not progress_queue:
+            raise LookupError(
+                f"Client {client_id} has no building or progress queue."
             )
 
-        building_id = self.client_to_building[client_id]
+        await progress_queue.put("__COMPLETE__")
+        self.building_to_client.pop(building_id, None)
 
-        if building_id not in self.building_progress:
-            self.building_progress[building_id] = [progress]
-        else:
-            self.building_progress[building_id].append(progress)
+    async def disconnect(self, client_id: str):
+        await self.complete(client_id)
+        await super().disconnect(client_id)
 
-        cond = self.building_progress_conditions.setdefault(
-            building_id, asyncio.Condition()
+    async def update_progress(self, client_id: str, progress: str):
+        shared = self.get_shared_data(client_id)
+        progress_queue: asyncio.Queue = shared.get("progress_queue")
+
+        if not progress_queue:
+            raise LookupError(
+                f"Client {client_id} has no active progress queue."
+            )
+
+        await progress_queue.put(progress)
+
+    async def get_progress(self, building_id: str):
+        if building_id not in self.building_to_client:
+            raise LookupError(
+                f"Building {building_id} is not associated with any client."
+            )
+
+        client_id = self.building_to_client[building_id]
+        progress_queue: asyncio.Queue = self.get_shared_data(client_id).get(
+            "progress_queue"
         )
 
-        async with cond:
-            cond.notify_all()
+        if not progress_queue:
+            raise LookupError(
+                f"Client {client_id} has no active progress queue."
+            )
 
-    async def get_progress(self, building_id: str) -> str:
-        cond = self.building_progress_conditions.setdefault(
-            building_id, asyncio.Condition()
-        )
+        progress = await progress_queue.get()
 
-        async with cond:
-            await cond.wait()
+        if progress == "__COMPLETE__":
+            raise StopAsyncIteration
 
-        return self.building_progress[building_id][-1]
+        return progress
 
     async def stop(self, building_id: str):
+        if building_id not in self.building_to_client:
+            raise LookupError(
+                f"Building {building_id} is not associated with any client."
+            )
+
         await self.send(
             self.building_to_client[building_id],
             BaseWebSocketDTO[None](type="stop", data=None),
