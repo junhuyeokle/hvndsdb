@@ -1,6 +1,7 @@
 from typing import Dict
 
 from fastapi import WebSocket
+from fastapi.logger import logger
 
 from dtos.base_dto import BaseWebSocketDTO
 
@@ -10,10 +11,12 @@ class WebSocketManager:
         self.connections: Dict[str, tuple[WebSocket, dict]] = {}
 
     async def accept(self, client_id: str, websocket: WebSocket):
+        logger.info(f"Accepting {client_id}")
         await websocket.accept()
         self.connections[client_id] = (websocket, {})
 
     async def disconnect(self, client_id: str):
+        logger.info(f"Disconnecting {client_id}")
         connection = self.connections.get(client_id)
         if connection:
             websocket, _ = connection
@@ -37,6 +40,7 @@ class WebSocketManager:
             shared_data[key] = value
 
     async def send(self, client_id: str, dto: BaseWebSocketDTO):
+        logger.info(f"Sending\nTo: {client_id}\n{dto}")
         websocket = self.get_web_socket(client_id)
         if websocket:
             await websocket.send_json(dto.model_dump(mode="json"))

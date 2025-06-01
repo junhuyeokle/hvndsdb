@@ -15,7 +15,9 @@ async def upload_service(client_id: str):
             type="upload",
             data=UploadDeblurGSDTO(
                 deblur_gs_url=get_presigned_upload_url(
-                    deblur_gs_manager.client_to_building[client_id]
+                    deblur_gs_manager.get_shared_data(client_id).get(
+                        "building_id"
+                    )
                     + "/deblur_gs.zip",
                     "application/zip",
                 ),
@@ -45,7 +47,9 @@ async def ply_url_service(client_id: str):
             type="ply_url",
             data=PLYUrlDTO(
                 ply_url=get_presigned_upload_url(
-                    deblur_gs_manager.client_to_building[client_id]
+                    deblur_gs_manager.get_shared_data(client_id).get(
+                        "building_id"
+                    )
                     + "/point_cloud.ply",
                     "application/octet-stream",
                 )

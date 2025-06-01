@@ -35,7 +35,9 @@ class AnalyzerManager(WebSocketManager):
         building_id = self.get_shared_data(client_id).get("building_id")
         if not building_id:
             raise LookupError(f"Client {client_id} has no associated building.")
-        await deblur_gs_manager.stop(building_id=building_id)
+        await deblur_gs_manager.stop(
+            deblur_gs_manager.building_to_client[building_id]
+        )
 
     async def update_progress(self, client_id: str, progress: str):
         queue: asyncio.Queue = self.get_shared_data(client_id).get(
@@ -46,13 +48,7 @@ class AnalyzerManager(WebSocketManager):
 
         await queue.put(progress)
 
-    async def get_progress(self, building_id: str):
-        if building_id not in self.building_to_client:
-            raise LookupError(
-                f"Building {building_id} is not associated with any client."
-            )
-
-        client_id = self.building_to_client[building_id]
+    async def get_progress(self, client_id: str):
         queue: asyncio.Queue = self.get_shared_data(client_id).get(
             "progress_queue"
         )

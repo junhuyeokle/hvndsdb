@@ -85,13 +85,7 @@ class DeblurGSManager(WebSocketManager):
 
         await progress_queue.put(progress)
 
-    async def get_progress(self, building_id: str):
-        if building_id not in self.building_to_client:
-            raise LookupError(
-                f"Building {building_id} is not associated with any client."
-            )
-
-        client_id = self.building_to_client[building_id]
+    async def get_progress(self, client_id: str):
         progress_queue: asyncio.Queue = self.get_shared_data(client_id).get(
             "progress_queue"
         )
@@ -108,14 +102,9 @@ class DeblurGSManager(WebSocketManager):
 
         return progress
 
-    async def stop(self, building_id: str):
-        if building_id not in self.building_to_client:
-            raise LookupError(
-                f"Building {building_id} is not associated with any client."
-            )
-
+    async def stop(self, client_id: str):
         await self.send(
-            self.building_to_client[building_id],
+            client_id,
             BaseWebSocketDTO[None](type="stop", data=None),
         )
 

@@ -1,5 +1,6 @@
 import json
 from fastapi import APIRouter, WebSocket
+from fastapi.logger import logger
 
 from utils.authorization import is_valid_timestamp, verify_hmac
 from dtos.base_dto import BaseWebSocketDTO
@@ -36,8 +37,8 @@ async def deblur_gs_route(websocket: WebSocket):
 
     try:
         while True:
-            raw = await websocket.receive_text()
-            dto = BaseWebSocketDTO(**json.loads(raw))
+            dto = BaseWebSocketDTO(**json.loads(await websocket.receive_text()))
+            logger.info(f"Received\n{dto}")
             if dto.type == "complete":
                 await complete_service(client_id=client_id)
             if dto.type == "upload_complete":

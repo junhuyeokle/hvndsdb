@@ -3,6 +3,7 @@ import os
 from fastapi.logger import logger
 from utils.envs import TEMP
 from managers.deblur_gs_manager import deblur_gs_manager
+from managers.analyzer_manager import analyzer_manager
 from utils.s3 import (
     download_file_from_presigned_url,
     download_folder_from_presigned_url,
@@ -83,8 +84,12 @@ async def run(building_id: str):
 
     try:
         while True:
-            progress = await deblur_gs_manager.get_progress(building_id)
-            logger.info(progress)
+            await analyzer_manager.update_progress(
+                analyzer_manager.building_to_client[building_id],
+                await deblur_gs_manager.get_progress(
+                    deblur_gs_manager.building_to_client[building_id]
+                ),
+            )
     except StopAsyncIteration:
         pass
 

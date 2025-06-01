@@ -5,6 +5,7 @@ from dtos.analyzer_dto import StartAnalyzerDTO
 from dtos.base_dto import BaseWebSocketDTO
 from managers.analyzer_manager import analyzer_manager
 from services.analyzer_service import start_service, stop_deblur_gs_service
+from fastapi.logger import logger
 
 analyzer_router = APIRouter()
 
@@ -16,8 +17,8 @@ async def analyzer_route(websocket: WebSocket):
 
     try:
         while True:
-            raw = await websocket.receive_text()
-            dto = BaseWebSocketDTO(**json.loads(raw))
+            dto = BaseWebSocketDTO(**json.loads(await websocket.receive_text()))
+            logger.info(f"Received\n{dto}")
             if dto.type == "start":
                 await start_service(
                     client_id, StartAnalyzerDTO.model_validate(dto.data)

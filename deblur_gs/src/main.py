@@ -51,6 +51,7 @@ async def handler(
     ply_url_condition: asyncio.Condition,
     shared_data: dict,
 ):
+    print(f"Received\n{dto}")
     if dto.type == "start":
         await start_service(
             response_queue, StartDeblurGSDTO.parse_obj(dto.data), shared_data
@@ -78,6 +79,7 @@ async def handler(
 async def sender(websocket, response_queue: asyncio.Queue):
     while True:
         message = await response_queue.get()
+        print(f"Sending\n{message}")
         await websocket.send(message)
 
 
@@ -109,33 +111,41 @@ async def client():
     sig = generate_hmac_signature(ts, WS_KEY)
     url = f"{SERVER_URL}?ts={ts}&sig={sig}"
 
-    try:
-        async with websockets.connect(url) as websocket:
-            print("Connected to server.")
+    async with websockets.connect(url) as websocket:
+        print("Connected")
 
-            sender_task = asyncio.create_task(sender(websocket, response_queue))
-            watcher_task = asyncio.create_task(
-                watcher(
-                    os.path.join(TEMP, "deblur_gs", "point_cloud"),
-                    response_queue,
-                    ply_url_condition,
-                    shared_data,
-                )
+        sender_task = asyncio.create_task(sender(websocket, response_queue))
+        watcher_task = asyncio.create_task(
+            watcher(
+                os.path.join(TEMP, "deblur_gs", "point_cloud"),
+                response_queue,
+                ply_url_condition,
+                shared_data,
+            )
+        )
+
+        async for request in websocket:
+            await handler(
+                BaseWebSocketDTO.parse_raw(request),
+                response_queue,
+                ply_url_condition,
+                shared_data,
             )
 
-            async for request in websocket:
-                await handler(
-                    BaseWebSocketDTO.parse_raw(request),
-                    response_queue,
-                    ply_url_condition,
-                    shared_data,
-                )
-
-            sender_task.cancel()
-            watcher_task.cancel()
-    except Exception as e:
-        print("Connection failed:", e)
+    sender_task.cancel()
+    try:
+        await sender_task
+    except asyncio.CancelledError:
+        pass
+    watcher_task.cancel()
+    try:
+        await watcher_task
+    except asyncio.CancelledError:
+        pass
 
 
 if __name__ == "__main__":
-    asyncio.run(client())
+    try:
+        asyncio.run(client())
+    except asyncio.CancelledError:
+        pass
