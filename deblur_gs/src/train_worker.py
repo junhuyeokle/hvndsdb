@@ -102,9 +102,10 @@ async def run(
 
         await send_queue.put(BaseWebSocketDTO[None](type="complete").json())
     except asyncio.CancelledError:
+        print("Train worker cancelled")
         if process and process.poll() is None:
             process.kill()
             await loop.run_in_executor(None, process.wait)
-        print("Train worker cancelled")
+        raise
 
     print("Train worker finished")

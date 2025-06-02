@@ -11,21 +11,8 @@ from managers import unity_manager
 unity_router = APIRouter()
 
 
-@unity_router.websocket("/")
+@unity_router.websocket("")
 async def unity_route(websocket: WebSocket):
-    ts = websocket.query_params.get("ts")
-    sig = websocket.query_params.get("sig")
-
-    if not ts or not sig:
-        await websocket.close(code=4001)
-        return
-    if not is_valid_timestamp(ts):
-        await websocket.close(code=4002)
-        return
-    if not verify_hmac(ts, sig):
-        await websocket.close(code=4003)
-        return
-
     client_id = "unity:" + websocket.client.host + ":" + uuid.uuid4().hex
     await unity_manager.accept(client_id, websocket)
 

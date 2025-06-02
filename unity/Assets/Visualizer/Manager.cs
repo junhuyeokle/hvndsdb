@@ -1,3 +1,5 @@
+using System.IO;
+using System.Threading.Tasks;
 using GaussianSplatting.Editor;
 using GaussianSplatting.Runtime;
 using UnityEditor;
@@ -8,31 +10,18 @@ namespace Visualizer
 {
     public class Manager : MonoBehaviour
     {
-        [SerializeField] private string buildingId;
+        public string sessionId;
         
         [FormerlySerializedAs("renderers")] [SerializeField] private GaussianSplatRenderer[] gsrs;
 
-        private static string BuildingId { get; set; }
-
-        private string _path; 
-        
-        private void Awake()
+        public async Task SetPly(string ply_url)
         {
-            BuildingId = buildingId;
+            byte[] plyBytes = await HttpDownloader.DownloadBytes(ply_url);
             
-            // _path = Config.DataPath + @"\" + BuildingId + @"\deblur_gs\output.ply";
-            _path = @"C:\Users\kyoun\Downloads\point_cloud.ply";
-            
-            InitAsset();
+            File.WriteAllBytes("Assets/Temps/" + sessionId + "/point_cloud.ply", plyBytes);
 
-            foreach (var gsr in gsrs)
-            {
-                gsr.m_Asset = AssetDatabase.LoadAssetAtPath<GaussianSplatAsset>("Assets/GaussianAssets/" + BuildingId + "/output.asset");
-            }
-        }
+            AssetDatabase.Refresh();
 
-        private void InitAsset()
-        {
             var editor = ScriptableObject.CreateInstance<GaussianSplatAssetCreatorEditor>();
 
             var mInputFile = typeof(GaussianSplatAssetCreatorEditor).GetField("m_InputFile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -40,8 +29,8 @@ namespace Visualizer
             var mImportCameras = typeof(GaussianSplatAssetCreatorEditor).GetField("m_ImportCameras", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var mQuality = typeof(GaussianSplatAssetCreatorEditor).GetField("m_Quality", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             
-            mInputFile?.SetValue(editor, _path);
-            mOutputFolder?.SetValue(editor, "Assets/GaussianAssets/" + BuildingId + "/");
+            mInputFile?.SetValue(editor, "Assets/Temps/" + sessionId + "/point_cloud.ply");
+            mOutputFolder?.SetValue(editor, "Assets/Temps/" + sessionId + "/");
             mImportCameras?.SetValue(editor, true);
             mQuality?.SetValue(editor, 2);
 
@@ -50,6 +39,11 @@ namespace Visualizer
 
             typeof(GaussianSplatAssetCreatorEditor).GetMethod("CreateAsset", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                 ?.Invoke(editor, null);
+            
+            foreach (var gsr in gsrs)
+            {
+                gsr.m_Asset = AssetDatabase.LoadAssetAtPath<GaussianSplatAsset>("Assets/Temps/" + sessionId + "/point_cloud.asset");
+            }
         }
     }
 }

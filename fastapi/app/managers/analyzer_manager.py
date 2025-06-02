@@ -53,6 +53,8 @@ class AnalyzerManager(WebSocketManager):
 
     async def disconnect(self, client_id: str):
         shared = self.get_shared_data(client_id)
+        if not shared:
+            return
         building_id = shared.pop("building_id", None)
         if building_id and building_id in self.buildings:
             self.buildings[building_id][1].discard(client_id)

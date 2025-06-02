@@ -1,4 +1,6 @@
+from datetime import datetime
 import os
+from typing import Optional
 import zipfile
 import aiohttp
 import boto3
@@ -102,3 +104,12 @@ def is_key_exists(key: str) -> bool:
             return False
         else:
             raise
+
+
+def get_last_modified(key: str) -> Optional[datetime]:
+    try:
+        response = s3_client.head_object(Bucket=S3_BUCKET_NAME, Key=key)
+        return response["LastModified"]
+    except botocore.exceptions.ClientError as e:
+        if e.response["Error"]["Code"] in "404":
+            return None
