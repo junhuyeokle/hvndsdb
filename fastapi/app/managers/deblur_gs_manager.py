@@ -60,14 +60,14 @@ class DeblurGSManager(WebSocketManager):
     async def complete(self, client_id: str):
         shared = self.get_shared_data(client_id)
         building_id = shared.pop("building_id", None)
-        progress_queue = shared.pop("progress_queue", None)
+        progress_queue: asyncio.Queue = shared.pop("progress_queue", None)
 
         if not building_id or not progress_queue:
             raise LookupError(
                 f"Client {client_id} has no building or progress queue."
             )
 
-        await progress_queue.put("__COMPLETE__")
+        await progress_queue.put(None)
         self.building_to_client.pop(building_id, None)
 
     async def disconnect(self, client_id: str):
@@ -97,7 +97,7 @@ class DeblurGSManager(WebSocketManager):
 
         progress = await progress_queue.get()
 
-        if progress == "__COMPLETE__":
+        if progress is None:
             raise StopAsyncIteration
 
         return progress

@@ -1,5 +1,6 @@
 import asyncio
 import os
+import shutil
 from envs import TEMP
 import train_worker
 from dto import PLYUrlDTO, StartDeblurGSDTO, BaseWebSocketDTO, UploadDeblurGSDTO
@@ -13,6 +14,9 @@ from utils import (
 async def start_service(
     response_queue: asyncio.Queue, dto: StartDeblurGSDTO, shared_data: dict
 ):
+    if os.path.isdir(TEMP):
+        shutil.rmtree(TEMP)
+
     await download_folder_from_presigned_url(
         dto.frames_url, os.path.join(TEMP, "frames")
     )

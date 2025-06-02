@@ -196,14 +196,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26d6499a6bd256e47b859377446493a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_IsGlobal: 1
+  m_IsGlobal: 0
   fadeRadius: 0
   priority: 0
   customPasses:
   - rid: 5105713714546868226
   injectionPoint: 3
-  m_TargetCamera: {fileID: 0}
-  useTargetCamera: 0
+  m_TargetCamera: {fileID: 2047454826}
+  useTargetCamera: 1
   references:
     version: 2
     RefIds:
@@ -320,7 +320,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bc1928bf0a98984a822ef3edd262f03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buildingId: test-building-1
+  sessionId: 
+  targetCamera: {fileID: 2047454826}
   gsrs:
   - {fileID: 898070330}
   - {fileID: 1400060102}
@@ -633,23 +634,14 @@ GameObject:
   m_Component:
   - component: {fileID: 2047454827}
   - component: {fileID: 2047454826}
-  - component: {fileID: 2047454825}
   - component: {fileID: 2047454828}
   m_Layer: 0
-  m_Name: Main Camera
-  m_TagString: MainCamera
+  m_Name: Camera
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &2047454825
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2047454824}
-  m_Enabled: 1
 --- !u!20 &2047454826
 Camera:
   m_ObjectHideFlags: 0
@@ -710,7 +702,7 @@ Transform:
   m_GameObject: {fileID: 2047454824}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -3,8 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import Image from "next/image";
 
 type StartData = { building_id: string };
+type AroundFrameData = { frame: string; frame_id: "around" };
+type CenterFrameData = { frame: string; frame_id: "center" };
 
 type ClientMessage =
   | { type: "start"; data: StartData }
@@ -12,14 +15,19 @@ type ClientMessage =
 
 type ServerMessage =
   | { type: "progress"; data: string }
+  | { type: "frame"; data: AroundFrameData | CenterFrameData }
   | { type: string; data: null };
 
 export default function AnalyzerPage() {
   const [buildingId, setBuildingId] = useState<string>("");
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [progressLog, setProgressLog] = useState<string[]>([]);
+  const [aroundImage, setAroundImage] = useState<string | null>(null);
+  const [centerImage, setCenterImage] = useState<string | null>(null);
+
   const ws = useRef<WebSocket | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (logRef.current) {
       logRef.current.scrollTop = logRef.current.scrollHeight;
@@ -45,17 +53,32 @@ export default function AnalyzerPage() {
     ws.current.onopen = () => {
       console.log("WebSocket connected");
       setIsConnected(true);
-
       sendMessage({ type: "start", data: { building_id: buildingId } });
     };
 
     ws.current.onmessage = (event: MessageEvent<string>) => {
       try {
         const message: ServerMessage = JSON.parse(event.data);
+
         switch (message.type) {
           case "progress":
             if (typeof message.data === "string") {
               setProgressLog((prev) => [...prev, message.data]);
+            }
+            break;
+
+          case "frame":
+            if (message.data && typeof message.data === "object") {
+              const frameData = message.data as
+                | AroundFrameData
+                | CenterFrameData;
+              const base64Url = `data:image/jpeg;base64,${frameData.frame}`;
+
+              if (frameData.frame_id === "around") {
+                setAroundImage(base64Url);
+              } else if (frameData.frame_id === "center") {
+                setCenterImage(base64Url);
+              }
             }
             break;
 
@@ -124,6 +147,52 @@ export default function AnalyzerPage() {
         {progressLog.map((line, idx) => (
           <div key={idx}>{line}</div>
         ))}
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Around 프레임 */}
+        <div>
+          <h2 className="text-lg font-semibold text-gray-700 mb-2">
+            Around 프레임
+          </h2>
+          <div className="rounded-md border overflow-hidden w-full relative aspect-[16/9] bg-gray-100 flex items-center justify-center">
+            {aroundImage ? (
+              <Image
+                src={aroundImage}
+                alt="Around frame"
+                width={1280}
+                height={720}
+                layout="responsive"
+                objectFit="contain"
+                unoptimized
+              />
+            ) : (
+              <span className="text-gray-400 text-sm">준비 중...</span>
+            )}
+          </div>
+        </div>
+
+        {/* Center 프레임 */}
+        <div>
+          <h2 className="text-lg font-semibold text-gray-700 mb-2">
+            Center 프레임
+          </h2>
+          <div className="rounded-md border overflow-hidden w-full relative aspect-[16/9] bg-gray-100 flex items-center justify-center">
+            {centerImage ? (
+              <Image
+                src={centerImage}
+                alt="Center frame"
+                width={1280}
+                height={720}
+                layout="responsive"
+                objectFit="contain"
+                unoptimized
+              />
+            ) : (
+              <span className="text-gray-400 text-sm">준비 중...</span>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

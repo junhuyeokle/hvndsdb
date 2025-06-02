@@ -8,6 +8,7 @@ dependencies:
   - sqlalchemy
   - tenacity
   - boto3
+  - pyglm
   - pip
   - pip:
       - aiohttp

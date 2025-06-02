@@ -5,34 +5,88 @@ using System.Threading.Tasks;
 using NativeWebSocket;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.Serialization;
 
 namespace Main
 {
     [Serializable]
-    public class Message
+    public class WebSocketBaseDto<T>
     {
         public string type;
-        public string data;
+        public T data;  
+        
+        public WebSocketBaseDto(string type, T data)
+        {
+            this.type = type;
+            this.data = data;
+        }
+    }
+
+    [Serializable]
+    public class FrameDto
+    {
+        public string session_id;
+        public string frame;
+
+        public FrameDto(string session_id, string frame)
+        {
+            this.session_id = session_id;
+            this.frame = frame;
+        }
+    }
+    
+    [Serializable]
+    public class SetCameraPositionDto
+    {
+        public string session_id;
+        public float x;
+        public float y;
+        public float z;
+    }
+
+    [Serializable]
+    public class SetCameraRotationDto
+    {
+        public string session_id;
+        public float x;
+        public float y;
+        public float z;
+        public float w;
+    }
+    
+    [Serializable]
+    public class WebSocketBase
+    {
+        public string type;
     }
 
     [Serializable]
     public class StartSessionDto
     {
-        [FormerlySerializedAs("session_id")] public string sessionID;
+        public string session_id;
     }
 
     [Serializable]
+    public class StartSessionCompleteDto
+    {
+        public string session_id;
+
+        public StartSessionCompleteDto(string session_id)
+        {
+            this.session_id = session_id;
+        }
+    }
+    
+    [Serializable]
     public class SetPlyDto
     {
-        [FormerlySerializedAs("ply_url")] public string plyURL;
-        [FormerlySerializedAs("session_id")] public string sessionID;
+        public string ply_url;
+        public string session_id;
     }
     
     [Serializable]
     public class SetCameraDto
     {
-        [FormerlySerializedAs("ply_url")] public string plyURL;
+        public string session_id;
         public Vector3 position;
         public Quaternion rotation; 
     }
@@ -41,90 +95,133 @@ namespace Main
     {
         private readonly Dictionary<string, Scene> _sessionToScene = new();
         
-        private WebSocket _websocket;
+        public static WebSocket WebSocket;
         
         private async Task HandleMessage(string message)
         {
-            var json = JsonUtility.FromJson<Message>(message);
-            Debug.Log("Received" + "\n" + message);
-        
-            switch (json.type)
+            try
             {
-                case "start":
-                    await StartSessionService(JsonUtility.FromJson<StartSessionDto>(json.data));
-                    break;
-        
-                case "set_ply":
-                    await SetPlyService(JsonUtility.FromJson<SetPlyDto>(json.data));
-                    break;
+                var json = JsonUtility.FromJson<WebSocketBase>(message);
+                Debug.Log("Received" + "\n" + message);
+                
+                switch (json.type)
+                {
+                    case "start_session":
+                        await StartSessionService(JsonUtility.FromJson<WebSocketBaseDto<StartSessionDto>>(message).data);
+                        break;
+                
+                    case "set_ply":
+                        await SetPlyService(JsonUtility.FromJson<WebSocketBaseDto<SetPlyDto>>(message).data);
+                        break;
+                    case "set_camera_position":
+                        await SetCameraPositionService(JsonUtility.FromJson<WebSocketBaseDto<SetCameraPositionDto>>(message).data);
+                        break;
+                    case "set_camera_rotation":
+                        await SetCameraRotationService(JsonUtility.FromJson<WebSocketBaseDto<SetCameraRotationDto>>(message).data);
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
+        }
+
+        private async Task SetCameraPositionService(SetCameraPositionDto dto)
+        {
+            var scene = _sessionToScene[dto.session_id];
+            var roots = scene.GetRootGameObjects();
+            Debug.Log($"Root count for session {dto.session_id}: {roots.Length}");
+
+            foreach (var rootObj in roots)
+            {
+                var manager = rootObj.GetComponentInChildren<Visualizer.Manager>();
+                if (!manager) continue;
+                await manager.SetCameraPosition(new Vector3(dto.x, dto.y, dto.z));
+                break;
             }
         }
         
-        private async Task SetPlyService(SetPlyDto data)
+        private async Task SetCameraRotationService(SetCameraRotationDto dto)
         {
-            var scene = _sessionToScene[data.sessionID];
-            foreach (var rootObj in scene.GetRootGameObjects())
+            var scene = _sessionToScene[dto.session_id];
+            var roots = scene.GetRootGameObjects();
+            Debug.Log($"Root count for session {dto.session_id}: {roots.Length}");
+
+            foreach (var rootObj in roots)
             {
                 var manager = rootObj.GetComponentInChildren<Visualizer.Manager>();
-                if (manager != null)
-                {
-                    await manager.SetPly(data.plyURL);
-                    return;
-                }
+                if (!manager) continue;
+                await manager.SetCameraRotation(new Quaternion(dto.x, dto.y, dto.z, dto.w));
+                break;
             }
+        }
+        
+        private async Task SetPlyService(SetPlyDto dto)
+        {
+            var scene = _sessionToScene[dto.session_id];
+            var roots = scene.GetRootGameObjects();
+            Debug.Log($"Root count for session {dto.session_id}: {roots.Length}");
 
-            Debug.LogWarning("No matching manager found");
+            foreach (var rootObj in roots)
+            {
+                var manager = rootObj.GetComponentInChildren<Visualizer.Manager>();
+                if (!manager) continue;
+                await manager.SetPly(dto.ply_url);
+                break;
+            }
         }
         
         private async Task StartSessionService(StartSessionDto data)
         {
+            var sceneID = SceneManager.sceneCount;
             var loadOp = SceneManager.LoadSceneAsync("Visualizer/Visualizer", LoadSceneMode.Additive);
-            await Task.Yield();
-        
+
             while (!loadOp!.isDone)
                 await Task.Yield();
-        
-            var scene = SceneManager.GetSceneByName("YourSceneName");
-            _sessionToScene[data.sessionID] = scene;
-            Debug.Log($"[UnityManager] Session {data.sessionID} mapped to scene {scene.name}");
             
-            foreach (var rootObj in scene.GetRootGameObjects())
+            var scene = SceneManager.GetSceneAt(sceneID);
+            _sessionToScene.Add(data.session_id, scene);
+            
+            var roots = scene.GetRootGameObjects();
+            foreach (var rootObj in roots)
             {
                 var manager = rootObj.GetComponentInChildren<Visualizer.Manager>();
-                if (manager != null)
-                {
-                    manager.sessionId = data.sessionID;
-                    return;
-                }
+                if (!manager) continue;
+                manager.sessionId = data.session_id;
+                break;
             }
-            Debug.LogWarning("No matching manager found.");
+            await WebSocket.SendText(
+                JsonUtility.ToJson(
+                    new WebSocketBaseDto<StartSessionCompleteDto>(
+                        "start_session_complete", 
+                        new StartSessionCompleteDto(data.session_id))));
         }
 
         private async void Start()
         {
-            _websocket = new WebSocket("ws://127.0.0.1:8000/ws/unity");
-
-            _websocket.OnOpen += () =>
+            try
             {
-                Debug.Log("[WebSocket] Connection opened");
-            };
+                WebSocket = new WebSocket("ws://127.0.0.1:8000/ws/unity");
 
-            _websocket.OnError += (e) =>
+                WebSocket.OnOpen += () => { Debug.Log("[WebSocket] Connection opened"); };
+
+                WebSocket.OnError += (e) => { Debug.LogError($"[WebSocket] Error: {e}"); };
+
+                WebSocket.OnClose += (e) => { Debug.Log($"[WebSocket] Connection closed with code {e}"); };
+
+                WebSocket.OnMessage += (bytes) => { _ = HandleMessage(Encoding.UTF8.GetString(bytes)); };
+
+                await WebSocket.Connect();
+            }
+            catch (Exception e)
             {
-                Debug.LogError($"[WebSocket] Error: {e}");
-            };
-
-            _websocket.OnClose += (e) =>
-            {
-                Debug.Log($"[WebSocket] Connection closed with code {e}");
-            };
-
-            _websocket.OnMessage += (bytes) =>
-            {
-                _ = HandleMessage(Encoding.UTF8.GetString(bytes));
-            };
-
-            await _websocket.Connect();
+                Debug.LogError(e);
+            }
+        }
+        private void Update()
+        {
+            WebSocket?.DispatchMessageQueue();
         }
     }
 }

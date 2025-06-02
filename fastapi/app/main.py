@@ -20,11 +20,33 @@ from routers.user_router import user_router
 from fastapi.logger import logger
 import logging
 
+
+class LineTruncatingFormatter(logging.Formatter):
+    def __init__(self, fmt=None, datefmt=None, max_line_length=1000):
+        super().__init__(fmt=fmt, datefmt=datefmt)
+        self.max_line_length = max_line_length
+
+    def format(self, record):
+        msg = super().format(record)
+        lines = msg.splitlines()
+
+        truncated_lines = [
+            (
+                line
+                if len(line) <= self.max_line_length
+                else line[: self.max_line_length] + " ...[truncated]"
+            )
+            for line in lines
+        ]
+        return "\n".join(truncated_lines)
+
+
+logger.setLevel(logging.INFO)
 logger.setLevel(logging.INFO)
 
 if not logger.hasHandlers():
     handler = logging.StreamHandler()
-    formatter = logging.Formatter("%(message)s")
+    formatter = LineTruncatingFormatter("%(message)s")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 

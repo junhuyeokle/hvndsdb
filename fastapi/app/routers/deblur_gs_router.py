@@ -33,7 +33,7 @@ async def deblur_gs_route(websocket: WebSocket):
         await websocket.close(code=4003)
         return
 
-    client_id = "deblur_gs:" + websocket.client.host + ":" + uuid.uuid4().hex
+    client_id = "deblur_gs-" + websocket.client.host + "-" + uuid.uuid4().hex
     await deblur_gs_manager.accept(client_id, websocket)
 
     try:

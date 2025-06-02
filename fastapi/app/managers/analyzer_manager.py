@@ -1,5 +1,6 @@
 import asyncio
 from typing import Dict, Set, Tuple
+from dtos.analyzer_dto import AroundFrameDTO, CenterFrameDTO
 from dtos.base_dto import BaseWebSocketDTO
 from managers.web_socket_manager import WebSocketManager
 
@@ -48,6 +49,27 @@ class AnalyzerManager(WebSocketManager):
                 BaseWebSocketDTO[str](
                     type="progress",
                     data=progress,
+                ),
+            )
+
+    async def update_center_frame(self, building_id: str, frame: str):
+        client_ids = self.buildings.get(building_id, (None, set()))[1]
+        for client_id in client_ids:
+            await self.send(
+                client_id,
+                BaseWebSocketDTO[CenterFrameDTO](
+                    type="frame",
+                    data=CenterFrameDTO(frame=frame),
+                ),
+            )
+
+    async def update_around_frame(self, building_id: str, frame: str):
+        client_ids = self.buildings.get(building_id, (None, set()))[1]
+        for client_id in client_ids:
+            await self.send(
+                client_id,
+                BaseWebSocketDTO[AroundFrameDTO](
+                    type="frame", data=AroundFrameDTO(frame=frame)
                 ),
             )
 
