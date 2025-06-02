@@ -1,4 +1,5 @@
 import json
+import uuid
 from fastapi import APIRouter, WebSocket
 
 from dtos.analyzer_dto import StartAnalyzerDTO
@@ -15,7 +16,7 @@ analyzer_router = APIRouter()
 
 @analyzer_router.websocket("")
 async def analyzer_route(websocket: WebSocket):
-    client_id = "analyzer:" + websocket.client.host
+    client_id = "analyzer:" + websocket.client.host + ":" + uuid.uuid4().hex
     await analyzer_manager.accept(client_id, websocket)
 
     try:

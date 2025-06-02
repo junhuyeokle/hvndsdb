@@ -1,4 +1,5 @@
 import json
+import uuid
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.logger import logger
 
@@ -25,7 +26,7 @@ async def unity_route(websocket: WebSocket):
         await websocket.close(code=4003)
         return
 
-    client_id = "unity:" + websocket.client.host
+    client_id = "unity:" + websocket.client.host + ":" + uuid.uuid4().hex
     await unity_manager.accept(client_id, websocket)
 
     try:

@@ -8,8 +8,7 @@ type StartData = { building_id: string };
 
 type ClientMessage =
   | { type: "start"; data: StartData }
-  | { type: "stop_deblur_gs"; data: null }
-  | { type: "progress"; data: null };
+  | { type: "stop_deblur_gs"; data: null };
 
 type ServerMessage =
   | { type: "progress"; data: string }

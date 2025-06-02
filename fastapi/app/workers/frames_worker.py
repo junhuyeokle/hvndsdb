@@ -1,4 +1,4 @@
-async def run(sample_path: str, frames_path: str, client_id: str):
+async def run(sample_path: str, frames_path: str, building_id: str):
     import asyncio
 
     from fastapi.logger import logger
@@ -19,7 +19,9 @@ async def run(sample_path: str, frames_path: str, client_id: str):
         line = await process.stdout.readline()
         if not line:
             break
-        await analyzer_manager.update_progress(client_id, line.decode().strip())
+        await analyzer_manager.update_progress(
+            building_id, line.decode().strip()
+        )
 
     result = await process.wait()
 

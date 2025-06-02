@@ -15,9 +15,7 @@ from utils.s3 import (
 from workers import colmap_worker, frames_worker
 
 
-async def run(client_id: str):
-    building_id = analyzer_manager.get_shared_data(client_id).get("building_id")
-
+async def run(building_id: str):
     FRAMES = not is_key_exists(os.path.join(building_id, "frames.zip"))
     COLMAP = not is_key_exists(os.path.join(building_id, "colmap.zip"))
 
@@ -42,7 +40,7 @@ async def run(client_id: str):
             sample_path,
         )
 
-        if not await frames_worker.run(sample_path, frames_path, client_id):
+        if not await frames_worker.run(sample_path, frames_path, building_id):
             await upload_folder_to_presigned_url(
                 get_presigned_upload_url(
                     os.path.join(building_id, "frames.zip"),
@@ -52,7 +50,7 @@ async def run(client_id: str):
             )
         else:
             await analyzer_manager.update_progress(
-                client_id, "Frames extraction failed."
+                building_id, "Frames extraction failed."
             )
             return
 
@@ -65,7 +63,7 @@ async def run(client_id: str):
                 frames_path,
             )
 
-        if not await colmap_worker.run(colmap_path, frames_path, client_id):
+        if not await colmap_worker.run(colmap_path, frames_path, building_id):
             await upload_folder_to_presigned_url(
                 get_presigned_upload_url(
                     os.path.join(building_id, "colmap.zip"),
@@ -75,7 +73,7 @@ async def run(client_id: str):
             )
         else:
             await analyzer_manager.update_progress(
-                client_id, "COLMAP extraction failed."
+                building_id, "COLMAP extraction failed."
             )
             return
 
@@ -84,7 +82,7 @@ async def run(client_id: str):
     try:
         while True:
             await analyzer_manager.update_progress(
-                client_id,
+                building_id,
                 await deblur_gs_manager.get_progress(
                     deblur_gs_manager.building_to_client[building_id]
                 ),
