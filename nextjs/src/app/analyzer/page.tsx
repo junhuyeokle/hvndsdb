@@ -5,21 +5,20 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 
-type StartSessionData = { session_id: string };
-type CancelDeblurData = { session_id: string };
+type StartSessionRequestData = { session_id: string };
+type CancelDeblurGSData = { session_id: string };
 type AroundFrameData = { frame: string; session_id: string };
 type CenterFrameData = { frame: string; session_id: string };
 type ProgressData = { progress: string; session_id: string };
 
 type ClientMessage =
-  | { type: "start_session"; data: StartSessionData }
-  | { type: "cancel_deblur_gs"; data: CancelDeblurData };
+  | { type: "start_session_request"; data: StartSessionRequestData }
+  | { type: "cancel_deblur_gs"; data: CancelDeblurGSData };
 
 type ServerMessage =
   | { type: "progress"; data: ProgressData }
   | { type: "around_frame"; data: AroundFrameData }
-  | { type: "center_frame"; data: CenterFrameData }
-  | { type: string; data: null };
+  | { type: "center_frame"; data: CenterFrameData };
 
 export default function AnalyzerPage() {
   const [buildingId, setBuildingId] = useState<string>("");
@@ -56,7 +55,10 @@ export default function AnalyzerPage() {
     ws.current.onopen = () => {
       console.log("WebSocket connected");
       setIsConnected(true);
-      sendMessage({ type: "start_session", data: { session_id: buildingId } });
+      sendMessage({
+        type: "start_session_request",
+        data: { session_id: buildingId },
+      });
     };
 
     ws.current.onmessage = (event: MessageEvent<string>) => {
@@ -147,7 +149,7 @@ export default function AnalyzerPage() {
 
       <div
         ref={logRef}
-        className="mt-4 p-4 bg-black text-green-400 font-mono text-sm h-96 overflow-auto whitespace-pre-wrap rounded-md shadow-inner"
+        className="mt-4 p-4 bg-black text-green-400 font-mono text-sm h-75 overflow-auto whitespace-pre-wrap break-words rounded-md shadow-inner"
       >
         {progressLog.map((line, idx) => (
           <div key={idx}>{line}</div>
@@ -155,18 +157,17 @@ export default function AnalyzerPage() {
       </div>
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Around 프레임 */}
         <div>
           <h2 className="text-lg font-semibold text-gray-700 mb-2">
             Around 프레임
           </h2>
-          <div className="rounded-md border overflow-hidden w-full relative aspect-[16/9] bg-gray-100 flex items-center justify-center">
+          <div className="rounded-md border overflow-hidden w-full relative aspect-[16/9] bg-black flex items-center justify-center">
             {aroundImage ? (
               <Image
                 src={aroundImage}
                 alt="Around frame"
-                width={1280}
-                height={720}
+                width={960}
+                height={540}
                 layout="responsive"
                 objectFit="contain"
                 unoptimized
@@ -177,18 +178,17 @@ export default function AnalyzerPage() {
           </div>
         </div>
 
-        {/* Center 프레임 */}
         <div>
           <h2 className="text-lg font-semibold text-gray-700 mb-2">
             Center 프레임
           </h2>
-          <div className="rounded-md border overflow-hidden w-full relative aspect-[16/9] bg-gray-100 flex items-center justify-center">
+          <div className="rounded-md border overflow-hidden w-full relative aspect-[16/9] bg-black flex items-center justify-center">
             {centerImage ? (
               <Image
                 src={centerImage}
                 alt="Center frame"
-                width={1280}
-                height={720}
+                width={960}
+                height={540}
                 layout="responsive"
                 objectFit="contain"
                 unoptimized

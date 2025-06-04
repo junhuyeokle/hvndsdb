@@ -7,6 +7,14 @@ class CancelDeblurGS(BaseSessionDataDTO):
     type: ClassVar[str] = "cancel_deblur_gs"
 
 
+class StartSessionRequestDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "start_session_request"
+
+
+class EndSessionRequestDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "end_session_request"
+
+
 class CenterFrameDTO(BaseSessionDataDTO):
     type: ClassVar[str] = "center_frame"
     frame: str

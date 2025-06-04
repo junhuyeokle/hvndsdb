@@ -3,6 +3,7 @@ import uuid
 
 from fastapi import APIRouter, WebSocket
 from fastapi.logger import logger
+from starlette.requests import ClientDisconnect
 
 from dtos.base_dto import BaseSessionReadyDTO
 from dtos.unity_dto import FrameDTO
@@ -35,7 +36,10 @@ async def unity_route(websocket: WebSocket):
                     client_id, FrameDTO.model_validate(dto_data)
                 )
             else:
-                logger.warning(f"Unknown DTO type: {dto_type}")
+                logger.warning(f"Unknown DTO type {dto_type}")
+    except ClientDisconnect:
+        pass
     except Exception as e:
-        logger.error(e)
+        logger.error(f"Unhandled Exception {e}")
+    finally:
         await unity_manager.end_client(client_id)

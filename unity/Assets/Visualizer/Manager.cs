@@ -13,8 +13,8 @@ namespace Visualizer
 {
     public class Manager : MonoBehaviour
     {
-        private const int Width = 1280;
-        private const int Height = 720;
+        private const int Width = 960;
+        private const int Height = 540;
 
         public string sessionId;
 
@@ -55,8 +55,10 @@ namespace Visualizer
                 typeof(GaussianSplatAssetCreatorEditor).GetField("m_Quality",
                     BindingFlags.NonPublic | BindingFlags.Instance);
 
+            string assetPath = "Assets/GaussianAssets/" + sessionId;
+            
             mInputFile?.SetValue(editor, plyPath);
-            mOutputFolder?.SetValue(editor, "Assets/GaussianAssets/" + sessionId);
+            mOutputFolder?.SetValue(editor, assetPath);
             mImportCameras?.SetValue(editor, true);
             mQuality?.SetValue(editor, 2);
 
@@ -69,13 +71,12 @@ namespace Visualizer
                 ?.Invoke(editor, null);
 
             AssetDatabase.Refresh();
-
-            string assetPath = "Assets/GaussianAssets/" + sessionId;
+            
             var guids = AssetDatabase.FindAssets("t:Object", new[] { assetPath });
 
             foreach (var guid in guids)
             {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var path = AssetDatabase.GUIDToAssetPath(guid);
 
                 if (!path.EndsWith(".asset")) continue;
 

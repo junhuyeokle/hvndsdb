@@ -7,9 +7,9 @@ from envs import VISDOM_HOST, VISDOM_PORT
 from globals import get_client
 from utils import get_last_checkpoint
 
-ITERATION = 10000
+ITERATION = 5000
 SAVE_POINT_CLOUD_INTERVAL = 50
-SAVE_CHECKPOINT_INTERVAL = 100
+SAVE_CHECKPOINT_INTERVAL = 500
 
 
 async def run(
@@ -51,13 +51,17 @@ async def run(
                 os.path.join(deblur_gs_path, f"chkpnt{start_checkpoint}.pth"),
             ]
 
+        start_checkpoint = (
+            start_checkpoint if start_checkpoint is not None else 0
+        )
+
         cmd += [
             "--save_iterations",
             *[
                 str(i)
                 for i in range(
-                    0 if start_checkpoint is None else start_checkpoint,
-                    iteration + 1,
+                    start_checkpoint,
+                    start_checkpoint + iteration + 1,
                     SAVE_POINT_CLOUD_INTERVAL,
                 )
             ],
@@ -68,8 +72,8 @@ async def run(
             *[
                 str(i)
                 for i in range(
-                    0 if start_checkpoint is None else start_checkpoint,
-                    iteration + 1,
+                    start_checkpoint,
+                    start_checkpoint + iteration + 1,
                     SAVE_CHECKPOINT_INTERVAL,
                 )
             ],

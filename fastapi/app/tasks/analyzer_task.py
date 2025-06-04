@@ -36,17 +36,6 @@ async def run(building_id: str):
     colmap_path = os.path.join(TEMP, building_id, "colmap")
     frames_path = os.path.join(TEMP, building_id, "frames")
 
-    logger.info(
-        "\n".join(
-            [
-                sample_path,
-                colmap_path,
-                frames_path,
-                building_id,
-            ]
-        )
-    )
-
     if FRAMES:
         await download_file_from_presigned_url(
             get_presigned_download_url(building_id + "/sample.mp4"),
@@ -92,11 +81,9 @@ async def run(building_id: str):
             return
 
     deblur_gs_client_id = await deblur_gs_manager.start_session(building_id)
-    logger.info(deblur_gs_client_id)
     deblur_gs_session = deblur_gs_manager.get_client(
         deblur_gs_client_id
     ).get_session(building_id)
-    logger.info(deblur_gs_session)
     center_session_id = "unity-center-" + building_id + "-" + uuid.uuid4().hex
     around_session_id = "unity-around-" + building_id + "-" + uuid.uuid4().hex
     center_client_id = await unity_manager.start_session(center_session_id)
@@ -230,6 +217,19 @@ async def run(building_id: str):
 
     await update_deblur_gs_progress_task
 
+    await unity_manager.get_client(center_client_id).end_session(
+        center_session_id,
+        BaseWebSocketDTO[BaseEndSessionDTO](
+            data=BaseEndSessionDTO(session_id=center_session_id)
+        ),
+    )
+    await unity_manager.get_client(around_client_id).end_session(
+        around_session_id,
+        BaseWebSocketDTO[BaseEndSessionDTO](
+            data=BaseEndSessionDTO(session_id=around_session_id)
+        ),
+    )
+
     update_center_frame_task.cancel()
     try:
         await update_center_frame_task
@@ -259,18 +259,5 @@ async def run(building_id: str):
         await update_unity_ply_task
     except asyncio.CancelledError:
         pass
-
-    await unity_manager.get_client(center_client_id).end_session(
-        center_session_id,
-        BaseWebSocketDTO[BaseEndSessionDTO](
-            data=BaseEndSessionDTO(session_id=center_session_id)
-        ),
-    )
-    await unity_manager.get_client(around_client_id).end_session(
-        around_session_id,
-        BaseWebSocketDTO[BaseEndSessionDTO](
-            data=BaseEndSessionDTO(session_id=around_session_id)
-        ),
-    )
 
     logger.info("Analyzer worker finished.")

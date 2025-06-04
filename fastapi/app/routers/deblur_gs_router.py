@@ -3,6 +3,7 @@ import uuid
 
 from fastapi import APIRouter, WebSocket
 from fastapi.logger import logger
+from starlette.requests import ClientDisconnect
 
 from dtos.deblur_gs_dto import (
     ProgressDTO,
@@ -48,7 +49,7 @@ async def deblur_gs_route(websocket: WebSocket):
             dto_type = message["type"]
             dto_data = message.get("data", {})
 
-            if dto_type == CompleteDTO:
+            if dto_type == CompleteDTO.type:
                 await complete_service(
                     client_id=client_id,
                     dto=CompleteDTO.model_validate(dto_data),
@@ -74,7 +75,10 @@ async def deblur_gs_route(websocket: WebSocket):
                     dto=CancelSessionCompleteDTO.model_validate(dto_data),
                 )
             else:
-                logger.warning(f"Unknown DTO type: {dto_type}")
+                logger.warning(f"Unknown DTO type {dto_type}")
+    except ClientDisconnect:
+        pass
     except Exception as e:
-        logger.error(e)
+        logger.error(f"Unhandled Exception {e}")
+    finally:
         await deblur_gs_manager.end_client(client_id)

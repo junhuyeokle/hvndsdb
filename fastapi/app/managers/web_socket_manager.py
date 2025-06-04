@@ -3,6 +3,7 @@ from typing import Dict, Type, TypeVar
 
 from fastapi import WebSocket
 from fastapi.logger import logger
+from starlette.websockets import WebSocketState
 
 from dtos.base_dto import (
     BaseWebSocketDTO,
@@ -20,8 +21,12 @@ class WebsocketClient:
         self._session_type = session_type
 
     async def send(self, dto: BaseWebSocketDTO):
-        logger.info(dto.model_dump(mode="json"))
-        await self._websocket.send_json(dto.model_dump(mode="json"))
+        json_str = dto.model_dump(mode="json")
+        logger.debug(f"Sending\n{json_str}")
+        try:
+            await self._websocket.send_json(json_str)
+        except Exception as e:
+            logger.warning(f"Send Failed\n{e}")
 
     async def start_session(self, session_id: str, dto: BaseWebSocketDTO):
         if session_id in self._sessions:
@@ -50,9 +55,8 @@ class WebsocketClient:
         await self.send(dto)
 
     async def end(self):
-        logger.info("Ending client session")
-
-        await self._websocket.close()
+        if self._websocket.client_state != WebSocketState.DISCONNECTED:
+            await self._websocket.close()
         for session in self._sessions.values():
             session.set_ended()
         self._sessions.clear()

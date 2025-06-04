@@ -30,7 +30,7 @@ class UnityClient(WebsocketClient):
         await session.put_frame(None)
 
     async def end_session(
-            self, session_id: str, dto: BaseWebSocketDTO[BaseEndSessionDTO]
+        self, session_id: str, dto: BaseWebSocketDTO[BaseEndSessionDTO]
     ):
         session: UnitySession = self.get_session(session_id)
         await session.put_frame(None)
@@ -84,6 +84,9 @@ class UnityManager(WebSocketManager):
         super().__init__(UnityClient, UnitySession)
 
     async def start_session(self, session_id: str) -> str:
+        if not self._clients:
+            raise LookupError("No clients connected")
+
         client_id = next(iter(self._clients.keys()))
 
         await self.get_client(client_id).start_session(

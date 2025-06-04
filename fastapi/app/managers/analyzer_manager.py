@@ -46,42 +46,40 @@ class AnalyzerSession(WebsocketSession):
 class AnalyzerManager(WebSocketManager):
     def __init__(self):
         super().__init__(AnalyzerClient, AnalyzerSession)
-        self._analyzers: dict[str, asyncio.Task] = {}
+        self._analyzer_tasks: dict[str, asyncio.Task] = {}
 
-    def start_analyzer(self, building_id: str):
-        if building_id in self._analyzers:
-            raise LookupError(f"Analyzer {building_id} already exists")
+    def start_analyzer_task(self, building_id: str):
+        if building_id in self._analyzer_tasks:
+            raise LookupError(f"Analyzer task {building_id} already exists")
 
-        self._analyzers[building_id] = asyncio.create_task(
+        self._analyzer_tasks[building_id] = asyncio.create_task(
             analyzer_task.run(building_id)
         )
+        self._analyzer_tasks[building_id].add_done_callback(
+            lambda t: self._analyzer_tasks.pop(building_id)
+        )
 
-    def get_analyzer(self, building_id: str) -> asyncio.Task:
-        analyzer = self._analyzers.get(building_id)
+    def has_analyzer_task(self, building_id: str) -> bool:
+        return building_id in self._analyzer_tasks
+
+    def get_analyzer_task(self, building_id: str) -> asyncio.Task:
+        analyzer = self._analyzer_tasks.get(building_id)
         if not analyzer:
-            raise LookupError(f"No analyzer found {building_id}")
+            raise LookupError(f"No analyzer task found {building_id}")
 
         return analyzer
 
-    async def end_analyzer(self, building_id: str):
-        analyzer = self._analyzers.pop(building_id)
-        if not analyzer:
-            raise LookupError(f"No analyzer found {building_id}")
-
-        self._analyzers[building_id].cancel()
-        await self._analyzers[building_id]
-
     async def update_progress(self, building_id: str, progress: str):
         for client in self._clients.values():
-            if not client.has_session(building_id):
+            if client.has_session(building_id):
                 await client.update_progress(building_id, progress)
 
     async def update_center_frame(self, building_id: str, frame: str):
         for client in self._clients.values():
-            if not client.has_session(building_id):
+            if client.has_session(building_id):
                 await client.update_center_frame(building_id, frame)
 
     async def update_around_frame(self, building_id: str, frame: str):
         for client in self._clients.values():
-            if not client.has_session(building_id):
+            if client.has_session(building_id):
                 await client.update_around_frame(building_id, frame)

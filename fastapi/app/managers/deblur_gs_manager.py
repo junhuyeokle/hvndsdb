@@ -12,7 +12,7 @@ from utils.s3 import get_presigned_download_url, is_key_exists
 
 class DeblurGSClient(WebsocketClient):
     async def start_session(
-            self, building_id: str, dto: BaseWebSocketDTO[StartSessionDTO]
+        self, building_id: str, dto: BaseWebSocketDTO[StartSessionDTO]
     ):
         await super().start_session(building_id, dto)
 
@@ -52,6 +52,9 @@ class DeblurGSManager(WebSocketManager):
         super().__init__(DeblurGSClient, DeblurGSSession)
 
     async def start_session(self, building_id: str) -> str:
+        if not self._clients:
+            raise LookupError("No clients connected")
+
         for client_id in self._clients.keys():
             if self.get_client(client_id).has_session(building_id):
                 return client_id
