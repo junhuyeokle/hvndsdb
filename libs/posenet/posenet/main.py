@@ -1,5 +1,5 @@
 import argparse
-from utils.colmap_csv_converter import convert_colmap_to_csv
+from .utils.colmap_csv_converter import convert_colmap_to_csv
 import subprocess
 import os
 
@@ -28,3 +28,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
