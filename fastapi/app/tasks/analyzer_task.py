@@ -4,25 +4,25 @@ import os
 import shutil
 import uuid
 
+from downloader import download_file_from_presigned_url, upload_folder_to_presigned_url, \
+    download_folder_from_presigned_url
 from fastapi.logger import logger
 from pyglm import glm
 
 from dtos.base_dto import BaseEndSessionDTO
-from managers import deblur_gs_manager, unity_manager, analyzer_manager
 from tasks import frames_task, colmap_task
 from utils.envs import TEMP
 from utils.s3 import (
-    download_file_from_presigned_url,
-    download_folder_from_presigned_url,
     get_last_modified,
     get_presigned_download_url,
     get_presigned_upload_url,
     is_key_exists,
-    upload_folder_to_presigned_url,
 )
 
 
 async def run(building_id: str):
+    from managers import deblur_gs_manager, unity_manager, analyzer_manager
+
     FRAMES = not is_key_exists(os.path.join(building_id, "frames.zip"))
     COLMAP = not is_key_exists(os.path.join(building_id, "colmap.zip"))
 
@@ -57,6 +57,7 @@ async def run(building_id: str):
                     "application/zip",
                 ),
                 frames_path,
+                TEMP
             )
         else:
             await analyzer_manager.update_progress(
@@ -69,6 +70,7 @@ async def run(building_id: str):
             await download_folder_from_presigned_url(
                 get_presigned_download_url(building_id + "/frames.zip"),
                 frames_path,
+                TEMP
             )
 
         if not await colmap_task.run(colmap_path, frames_path, building_id):
@@ -78,6 +80,7 @@ async def run(building_id: str):
                     "application/zip",
                 ),
                 colmap_path,
+                TEMP
             )
         else:
             await analyzer_manager.update_progress(

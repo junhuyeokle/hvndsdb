@@ -29,7 +29,9 @@ class UnityClient(WebsocketClient):
         session: UnitySession = self.get_session(session_id)
         await session.put_frame(None)
 
-    async def end_session(self, session_id: str, dto: BaseEndSessionDTO):
+    async def end_session(
+            self, session_id: str, dto: BaseWebSocketDTO[BaseEndSessionDTO]
+    ):
         session: UnitySession = self.get_session(session_id)
         await session.put_frame(None)
         await super().end_session(session_id, dto)
@@ -85,8 +87,10 @@ class UnityManager(WebSocketManager):
         client_id = next(iter(self._clients.keys()))
 
         await self.get_client(client_id).start_session(
-            session_id=session_id,
-            dto=BaseStartSessionDTO(session_id=session_id),
+            session_id,
+            BaseWebSocketDTO[BaseStartSessionDTO](
+                data=BaseStartSessionDTO(session_id=session_id),
+            ),
         )
 
         return client_id

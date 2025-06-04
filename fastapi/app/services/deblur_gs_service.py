@@ -33,7 +33,10 @@ async def complete_service(client_id: str, dto: CompleteDTO):
 
 async def upload_complete_service(client_id: str, dto: UploadCompleteDTO):
     await deblur_gs_manager.get_client(client_id).end_session(
-        dto.session_id, BaseEndSessionDTO(session_id=dto.session_id)
+        dto.session_id,
+        BaseWebSocketDTO[BaseEndSessionDTO](
+            data=BaseEndSessionDTO(session_id=dto.session_id)
+        ),
     )
 
 

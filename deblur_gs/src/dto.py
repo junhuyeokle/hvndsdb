@@ -1,6 +1,7 @@
 from typing import Generic, Optional, TypeVar, ClassVar
 
 from pydantic import BaseModel, validator
+from pydantic.generics import GenericModel
 
 
 class BaseDataDTO(BaseModel):
@@ -11,7 +12,7 @@ class BaseDataDTO(BaseModel):
 T = TypeVar("T", bound=BaseDataDTO)
 
 
-class BaseWebSocketDTO(BaseModel, Generic[T]):
+class BaseWebSocketDTO(GenericModel, Generic[T]):
     data: Optional[T] = None
     type: str = ""
 

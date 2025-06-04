@@ -3,8 +3,8 @@ from typing import ClassVar
 from dtos.base_dto import BaseSessionDataDTO
 
 
-class StopDeblurGSDTO(BaseSessionDataDTO):
-    type: ClassVar[str] = "stop_deblur_gs"
+class CancelDeblurGS(BaseSessionDataDTO):
+    type: ClassVar[str] = "cancel_deblur_gs"
 
 
 class CenterFrameDTO(BaseSessionDataDTO):

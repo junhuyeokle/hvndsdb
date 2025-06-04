@@ -6,15 +6,17 @@ import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 
 type StartSessionData = { session_id: string };
-type AroundFrameData = { frame: string };
-type CenterFrameData = { frame: string };
+type CancelDeblurData = { session_id: string };
+type AroundFrameData = { frame: string; session_id: string };
+type CenterFrameData = { frame: string; session_id: string };
+type ProgressData = { progress: string; session_id: string };
 
 type ClientMessage =
   | { type: "start_session"; data: StartSessionData }
-  | { type: "stop_deblur_gs"; data: null };
+  | { type: "cancel_deblur_gs"; data: CancelDeblurData };
 
 type ServerMessage =
-  | { type: "progress"; data: string }
+  | { type: "progress"; data: ProgressData }
   | { type: "around_frame"; data: AroundFrameData }
   | { type: "center_frame"; data: CenterFrameData }
   | { type: string; data: null };
@@ -63,8 +65,9 @@ export default function AnalyzerPage() {
 
         switch (message.type) {
           case "progress":
-            if (typeof message.data === "string") {
-              setProgressLog((prev) => [...prev, message.data]);
+            if (message.data && typeof message.data === "object") {
+              const progressData = message.data as ProgressData;
+              setProgressLog((prev) => [...prev, progressData.progress]);
             }
             break;
 
@@ -99,7 +102,7 @@ export default function AnalyzerPage() {
   };
 
   const handleStop = () => {
-    sendMessage({ type: "stop_deblur_gs", data: null });
+    sendMessage({ type: "cancel_deblur_gs", data: { session_id: buildingId } });
   };
 
   useEffect(() => {

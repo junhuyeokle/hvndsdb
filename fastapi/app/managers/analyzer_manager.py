@@ -36,9 +36,6 @@ class AnalyzerClient(WebsocketClient):
             )
         )
 
-    async def has_session(self, building_id: str) -> bool:
-        return building_id in self._sessions
-
 
 class AnalyzerSession(WebsocketSession):
     def __init__(self, session_id: str, client: AnalyzerClient):

@@ -6,8 +6,6 @@ from fastapi.logger import logger
 
 from dtos.base_dto import (
     BaseWebSocketDTO,
-    BaseStartSessionDTO,
-    BaseEndSessionDTO,
 )
 
 S = TypeVar("S", bound="WebsocketSession")
@@ -22,16 +20,21 @@ class WebsocketClient:
         self._session_type = session_type
 
     async def send(self, dto: BaseWebSocketDTO):
+        logger.info(dto)
+        logger.info(dto.model_dump(mode="json"))
         await self._websocket.send_json(dto.model_dump(mode="json"))
 
-    async def start_session(self, session_id: str, dto: BaseStartSessionDTO):
+    async def start_session(self, session_id: str, dto: BaseWebSocketDTO):
         if session_id in self._sessions:
             raise LookupError(f"Session {session_id} already exists")
 
         logger.info(f"Starting session {session_id}")
 
         self._sessions[session_id] = self._session_type(session_id, self)
-        await self.send(BaseWebSocketDTO[BaseStartSessionDTO](data=dto))
+        await self.send(dto)
+
+    def has_session(self, session_id: str) -> bool:
+        return session_id in self._sessions
 
     def get_session(self, session_id: str) -> S:
         session = self._sessions.get(session_id)
@@ -40,12 +43,12 @@ class WebsocketClient:
 
         return session
 
-    async def end_session(self, session_id: str, dto: BaseEndSessionDTO):
+    async def end_session(self, session_id: str, dto: BaseWebSocketDTO):
         logger.info(f"Ending session {session_id}")
 
         session = self.get_session(session_id)
         session.set_ended()
-        await self.send(BaseWebSocketDTO[BaseEndSessionDTO](data=dto))
+        await self.send(dto)
 
     async def end(self):
         logger.info("Ending client session")

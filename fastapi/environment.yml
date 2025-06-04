@@ -11,9 +11,9 @@ dependencies:
   - pyglm
   - pip
   - pip:
-      - aiohttp
       - fastapi
       - uvicorn[standard]
       - pymysql
       - python-dotenv
-      - ../libs/analyzer
+      - -e ../libs/analyzer
+      - -e ../libs/downloader

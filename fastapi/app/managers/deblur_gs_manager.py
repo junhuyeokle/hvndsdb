@@ -1,6 +1,6 @@
 import asyncio
 
-from dtos.base_dto import BaseWebSocketDTO, BaseEndSessionDTO
+from dtos.base_dto import BaseWebSocketDTO
 from dtos.deblur_gs_dto import CancelSessionDTO, StartSessionDTO
 from managers.web_socket_manager import (
     WebSocketManager,
@@ -11,6 +11,11 @@ from utils.s3 import get_presigned_download_url, is_key_exists
 
 
 class DeblurGSClient(WebsocketClient):
+    async def start_session(
+            self, building_id: str, dto: BaseWebSocketDTO[StartSessionDTO]
+    ):
+        await super().start_session(building_id, dto)
+
     async def cancel_session(self, building_id: str):
         await self.get_session(building_id).put_progress(None)
         await self.send(
@@ -19,12 +24,9 @@ class DeblurGSClient(WebsocketClient):
             ),
         )
 
-    async def end_session(self, building_id: str, dto: BaseEndSessionDTO):
+    async def end_session(self, building_id: str, dto: BaseWebSocketDTO):
         await self.get_session(building_id).put_progress(None)
         await super().end_session(building_id, dto)
-
-    async def has_session(self, building_id: str) -> bool:
-        return building_id in self._sessions
 
 
 class DeblurGSSession(WebsocketSession):
@@ -57,18 +59,22 @@ class DeblurGSManager(WebSocketManager):
 
         await self.get_client(client_id).start_session(
             building_id,
-            StartSessionDTO(
-                session_id=building_id,
-                frames_url=get_presigned_download_url(
-                    building_id + "/frames.zip"
-                ),
-                colmap_url=get_presigned_download_url(
-                    building_id + "/colmap.zip"
-                ),
-                deblur_gs_url=(
-                    get_presigned_download_url(building_id + "/deblur_gs.zip")
-                    if is_key_exists(building_id + "/deblur_gs.zip")
-                    else None
+            BaseWebSocketDTO[StartSessionDTO](
+                data=StartSessionDTO(
+                    session_id=building_id,
+                    frames_url=get_presigned_download_url(
+                        building_id + "/frames.zip"
+                    ),
+                    colmap_url=get_presigned_download_url(
+                        building_id + "/colmap.zip"
+                    ),
+                    deblur_gs_url=(
+                        get_presigned_download_url(
+                            building_id + "/deblur_gs.zip"
+                        )
+                        if is_key_exists(building_id + "/deblur_gs.zip")
+                        else None
+                    ),
                 ),
             ),
         )

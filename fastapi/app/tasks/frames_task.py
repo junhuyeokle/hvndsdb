@@ -17,9 +17,11 @@ async def run(sample_path: str, frames_path: str, building_id: str):
 
     while True:
         line = await process.stdout.readline()
-        if not line:
+        if line is None:
             break
-        await analyzer_manager.put_progress(building_id, line.decode().strip())
+        await analyzer_manager.update_progress(
+            building_id, line.decode().strip()
+        )
 
     result = await process.wait()
 

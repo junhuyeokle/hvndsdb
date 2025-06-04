@@ -19,7 +19,6 @@ from utils.exception import (
 
 # necessary to import all models to register them with SQLAlchemy
 import entities
-import managers
 
 
 class LineTruncatingFormatter(logging.Formatter):
@@ -48,7 +47,7 @@ logger.setLevel(logging.INFO)
 if not logger.hasHandlers():
     handler = logging.StreamHandler()
     formatter = LineTruncatingFormatter(
-        "%(filename)s.%(funcName)s():%(lineno)d %(message)s"
+        "%(filename)s.%(funcName)s():%(lineno)d\n%(message)s"
     )
     handler.setFormatter(formatter)
     logger.addHandler(handler)

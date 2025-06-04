@@ -2,16 +2,19 @@ import asyncio
 
 
 async def run(
-        frames_url: str, colmap_url: str, deblur_gs_url: str, session_id: str
+        session_id: str, frames_url: str, colmap_url: str, deblur_gs_url: str
 ):
+    from envs import TEMP
     import subprocess
 
     loop = asyncio.get_running_loop()
 
     cmd = [
         "python",
+        "-u",
         __file__,
         session_id,
+        TEMP,
         frames_url,
         colmap_url,
         deblur_gs_url,
@@ -27,39 +30,42 @@ async def run(
         )
 
     process = await loop.run_in_executor(None, process)
-    from globals import deblur_gs_client
+    from globals import get_client
 
-    session = deblur_gs_client.get_session(session_id)
+    session = get_client().get_session(session_id)
 
     while process.poll() is None:
         line = await loop.run_in_executor(None, process.stdout.readline)
         line = line.strip()
         await session.update_progress(line)
 
+    print(f"Download task finished")
+
 
 async def main():
-    import sys
-    from envs import TEMP
-    from utils import download_folder_from_presigned_url
     import os
+    import sys
+
+    from downloader import download_folder_from_presigned_url
 
     session_id = sys.argv[1]
-    frames_url = sys.argv[2]
-    colmap_url = sys.argv[3]
-    deblur_gs_url = sys.argv[4] if len(sys.argv) > 4 else None
+    temp = sys.argv[2]
+    frames_url = sys.argv[3]
+    colmap_url = sys.argv[4]
+    deblur_gs_url = sys.argv[5] if len(sys.argv) > 5 else None
 
-    session_path = os.path.join(TEMP, session_id)
+    session_path = os.path.join(temp, session_id)
 
     await download_folder_from_presigned_url(
-        frames_url, os.path.join(session_path, "frames")
+        frames_url, os.path.join(session_path, "frames"), temp
     )
     await download_folder_from_presigned_url(
-        colmap_url, os.path.join(session_path, "colmap")
+        colmap_url, os.path.join(session_path, "colmap"), temp
     )
 
     if deblur_gs_url:
         await download_folder_from_presigned_url(
-            deblur_gs_url, os.path.join(session_path, "deblur_gs")
+            deblur_gs_url, os.path.join(session_path, "deblur_gs"), temp
         )
 
 

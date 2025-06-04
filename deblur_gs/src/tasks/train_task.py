@@ -4,11 +4,11 @@ import subprocess
 
 from dto import BaseWebSocketDTO, CompleteDTO
 from envs import VISDOM_HOST, VISDOM_PORT
-from globals import deblur_gs_client
+from globals import get_client
 from utils import get_last_checkpoint
 
-ITERATION = 100000
-SAVE_POINT_CLOUD_INTERVAL = 20
+ITERATION = 10000
+SAVE_POINT_CLOUD_INTERVAL = 50
 SAVE_CHECKPOINT_INTERVAL = 100
 
 
@@ -75,6 +75,9 @@ async def run(
             ],
         ]
 
+        session = get_client().get_session(session_id)
+        await session.update_progress(" ".join(cmd))
+
         def process():
             return subprocess.Popen(
                 cmd,
@@ -85,14 +88,12 @@ async def run(
             )
 
         process = await loop.run_in_executor(None, process)
-        session = deblur_gs_client.get_session(session_id)
-
         while process.poll() is None:
             line = await loop.run_in_executor(None, process.stdout.readline)
             line = line.strip()
             await session.update_progress(line)
 
-        await deblur_gs_client.send(
+        await get_client().send(
             BaseWebSocketDTO[CompleteDTO](
                 data=CompleteDTO(session_id=session_id)
             )
@@ -103,5 +104,7 @@ async def run(
             process.kill()
             await loop.run_in_executor(None, process.wait)
         raise
+    except Exception as e:
+        print(e)
 
     print("Train worker finished")

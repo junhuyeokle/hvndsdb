@@ -4,7 +4,7 @@ import uuid
 from fastapi import APIRouter, WebSocket
 from fastapi.logger import logger
 
-from dtos.analyzer_dto import StopDeblurGSDTO
+from dtos.analyzer_dto import CancelDeblurGS
 from dtos.base_dto import BaseStartSessionDTO
 from managers import analyzer_manager
 from services.analyzer_service import (
@@ -30,9 +30,9 @@ async def analyzer_route(websocket: WebSocket):
                 start_session_service(
                     BaseStartSessionDTO.model_validate(dto_data)
                 )
-            elif dto_type == StopDeblurGSDTO.type:
+            elif dto_type == CancelDeblurGS.type:
                 await stop_deblur_gs_service(
-                    StopDeblurGSDTO.model_validate(dto_data)
+                    CancelDeblurGS.model_validate(dto_data)
                 )
             else:
                 logger.error(f"Unknown DTO type: {dto_type}")

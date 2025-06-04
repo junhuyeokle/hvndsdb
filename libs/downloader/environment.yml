@@ -1,0 +1,10 @@
+name: downloader
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.12
+  - aiohttp
+  - pip
+  - pip:
+      - setuptools

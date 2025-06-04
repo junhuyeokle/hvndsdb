@@ -2,7 +2,6 @@ import asyncio
 from typing import Dict, Optional
 
 from dto import BaseWebSocketDTO, ProgressDTO
-from tasks import deblur_gs_task
 
 
 class DeblurGSSession:
@@ -18,15 +17,17 @@ class DeblurGSSession:
         return await self._ply.get()
 
     async def update_progress(self, progress: str):
-        await deblur_gs_client.send(
+        await Globals.deblur_gs_client.send(
             BaseWebSocketDTO[ProgressDTO](
                 data=ProgressDTO(session_id=self._session_id, progress=progress)
             )
         )
 
     def start_deblur_gs_task(
-            self, frames_url: str, colmap_url: str, deblur_gs_url: Optional[str]
+        self, frames_url: str, colmap_url: str, deblur_gs_url: Optional[str]
     ):
+        from tasks import deblur_gs_task
+
         self._deblur_gs_task = asyncio.create_task(
             deblur_gs_task.run(
                 self._session_id,
@@ -51,7 +52,7 @@ class DeblurGSClient:
         self._sessions: Dict[str, DeblurGSSession] = {}
         self._websocket = websocket
 
-    async def start_session(self, session_id: str) -> DeblurGSSession:
+    def start_session(self, session_id: str) -> DeblurGSSession:
         if session_id in self._sessions:
             raise LookupError(f"Session {session_id} already exists")
 
@@ -70,7 +71,19 @@ class DeblurGSClient:
             raise LookupError(f"No session found {session_id}")
 
     async def send(self, dto: BaseWebSocketDTO):
-        self._websocket.send(dto.json(mode="json"))
+        print(dto.json())
+        await self._websocket.send(dto.json())
 
 
-deblur_gs_client: Optional[DeblurGSClient] = None
+class Globals:
+    deblur_gs_client: Optional[DeblurGSClient] = None
+
+
+def set_client(websocket):
+    Globals.deblur_gs_client = DeblurGSClient(websocket)
+
+
+def get_client() -> DeblurGSClient:
+    if Globals.deblur_gs_client is None:
+        raise LookupError("DeblurGSClient is not set")
+    return Globals.deblur_gs_client

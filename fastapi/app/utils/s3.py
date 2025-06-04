@@ -1,18 +1,12 @@
-import os
-import uuid
-import zipfile
 from datetime import datetime
 
-import aiohttp
 import boto3
-from fastapi.logger import logger
 
 from utils.envs import (
     AWS_ACCESS_KEY,
     AWS_REGION,
     AWS_SECRET_KEY,
     S3_BUCKET_NAME,
-    TEMP,
 )
 
 s3_client = boto3.client(
@@ -44,55 +38,6 @@ def get_presigned_download_url(key: str) -> str:
         },
         ExpiresIn=300,
     )
-
-
-async def download_folder_from_presigned_url(url: str, path: str):
-    zip_path = os.path.join(TEMP, uuid.uuid4().hex + ".zip")
-
-    await download_file_from_presigned_url(url, zip_path)
-
-    logger.info(f"Unzipping\nFrom: {zip_path}\nTo: {path}")
-    with zipfile.ZipFile(zip_path) as zip_ref:
-        zip_ref.extractall(path)
-        logger.info(f"Unzipped\nFrom: {zip_path}\nTo: {path}")
-
-    os.remove(zip_path)
-
-
-async def download_file_from_presigned_url(url: str, path: str):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-
-    logger.info(f"Downloading\nFrom: {url}\nTo: {path}")
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status != 200:
-                raise Exception(f"Download failed")
-            with open(path, "wb") as f:
-                f.write(await response.read())
-    logger.info(f"Downloaded\nFrom: {url}\nTo: {path}")
-
-
-async def upload_folder_to_presigned_url(url: str, path: str):
-    zip_path = os.path.join(TEMP, uuid.uuid4().hex + ".zip")
-
-    logger.info(f"Zipping\nFrom: {path}\nTo: {zip_path}")
-    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-        for root, _, files in os.walk(path):
-            for file in files:
-                full_path = os.path.join(root, file)
-                rel_path = os.path.relpath(full_path, path)
-                zipf.write(full_path, rel_path)
-    logger.info(f"Zipped\nFrom: {path}\nTo: {zip_path}")
-
-    logger.info(f"Uploading\nFrom: {zip_path}\nTo: {url}")
-    async with aiohttp.ClientSession() as session:
-        with open(zip_path, "rb") as f:
-            await session.put(
-                url, data=f, headers={"Content-Type": "application/zip"}
-            )
-    logger.info(f"Uploaded\nFrom: {zip_path}\nTo: {url}")
-
-    os.remove(zip_path)
 
 
 def is_key_exists(key: str) -> bool:

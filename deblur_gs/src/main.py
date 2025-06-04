@@ -1,11 +1,11 @@
 import asyncio
+import json
 import subprocess
 import time
 
 import websockets
 
 from dto import (
-    BaseWebSocketDTO,
     UploadDTO,
     StartSessionDTO,
     CancelSessionDTO,
@@ -26,25 +26,33 @@ async def router():
     sig = generate_hmac_signature(ts, WS_KEY)
     url = f"{SERVER_URL}?ts={ts}&sig={sig}"
     async with websockets.connect(url) as websocket:
-        async for request in websocket:
-            dto = BaseWebSocketDTO.parse_raw(request)
-            if dto.type == StartSessionDTO.type:
-                start_session_service(StartSessionDTO.parse_obj(dto.data))
+        from globals import set_client
 
-            elif dto.type == CancelSessionDTO.type:
+        set_client(websocket)
+
+        print("Connected")
+
+        async for request in websocket:
+            message = json.loads(request)
+            dto_type = message["type"]
+            dto_data = message.get("data", {})
+            if dto_type == StartSessionDTO.type:
+                start_session_service(StartSessionDTO.parse_obj(dto_data))
+
+            elif dto_type == CancelSessionDTO.type:
                 await cancel_session_service(
-                    CancelSessionDTO.parse_obj(dto.data)
+                    CancelSessionDTO.parse_obj(dto_data)
                 )
 
-            elif dto.type == UploadDTO.type:
-                await upload_service(UploadDTO.parse_obj(dto.data))
+            elif dto_type == UploadDTO.type:
+                await upload_service(UploadDTO.parse_obj(dto_data))
 
-            elif dto.type == PLYUrlResponseDTO:
+            elif dto_type == PLYUrlResponseDTO.type:
                 await ply_url_response_service(
-                    PLYUrlResponseDTO.parse_obj(dto.data),
+                    PLYUrlResponseDTO.parse_obj(dto_data),
                 )
             else:
-                print(f"Unknown DTO type: {dto.type}")
+                print(f"Unknown DTO type: {dto_type}")
 
 
 if __name__ == "__main__":
