@@ -9,11 +9,12 @@ dependencies:
   - tenacity
   - boto3
   - pyglm
+  - black
+  - fastapi
+  - pymysql
+  - python-dotenv
   - pip
   - pip:
-      - fastapi
       - uvicorn[standard]
-      - pymysql
-      - python-dotenv
-      - -e ../libs/analyzer
-      - -e ../libs/downloader
+      - ../libs/analyzer
+      - ../libs/downloader

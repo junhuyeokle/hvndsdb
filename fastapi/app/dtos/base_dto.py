@@ -33,8 +33,8 @@ class BaseStartSessionDTO(BaseSessionDataDTO):
     type: ClassVar[str] = "start_session"
 
 
-class BaseReadyDTO(BaseSessionDataDTO):
-    type: ClassVar[str] = "ready"
+class BaseSessionReadyDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "session_ready"
 
 
 class BaseEndSessionDTO(BaseSessionDataDTO):

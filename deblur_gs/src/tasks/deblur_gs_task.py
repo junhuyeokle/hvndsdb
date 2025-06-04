@@ -7,7 +7,7 @@ from tasks import download_task, train_task, ply_task
 
 
 async def run(
-        session_id: str, frames_url: str, colmap_url: str, deblur_gs_url: str
+    session_id: str, frames_url: str, colmap_url: str, deblur_gs_url: str
 ):
     session_train_task = None
     session_ply_task = None

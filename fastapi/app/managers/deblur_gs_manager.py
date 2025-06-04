@@ -33,6 +33,7 @@ class DeblurGSSession(WebsocketSession):
     def __init__(self, session_id: str, client: DeblurGSClient):
         super().__init__(session_id, client)
         self._progress: asyncio.Queue = asyncio.Queue()
+        self.set_ready()
 
     async def put_progress(self, progress: str | None):
         await self._progress.put(progress)

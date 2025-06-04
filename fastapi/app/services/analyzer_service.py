@@ -7,5 +7,5 @@ def start_session_service(dto: BaseStartSessionDTO):
     analyzer_manager.start_analyzer(dto.session_id)
 
 
-async def stop_deblur_gs_service(dto: CancelDeblurGS):
+async def cancel_deblur_gs_service(dto: CancelDeblurGS):
     await deblur_gs_manager.cancel_session(dto.session_id)

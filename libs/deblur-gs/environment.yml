@@ -17,9 +17,9 @@ dependencies:
   - tensorboard
   - visdom
   - scipy
+  - opencv
   - matplotlib
   - pip:
-      - opencv-python
       - easydict
       - ../../wheels/diff_gaussian_rasterization-0.0.0-cp37-cp37m-win_amd64.whl
       - ../../wheels/pytorch3d-0.7.6-cp37-cp37m-win_amd64.whl

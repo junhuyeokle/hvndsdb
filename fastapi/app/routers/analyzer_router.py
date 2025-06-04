@@ -9,7 +9,7 @@ from dtos.base_dto import BaseStartSessionDTO
 from managers import analyzer_manager
 from services.analyzer_service import (
     start_session_service,
-    stop_deblur_gs_service,
+    cancel_deblur_gs_service,
 )
 
 analyzer_router = APIRouter()
@@ -31,7 +31,7 @@ async def analyzer_route(websocket: WebSocket):
                     BaseStartSessionDTO.model_validate(dto_data)
                 )
             elif dto_type == CancelDeblurGS.type:
-                await stop_deblur_gs_service(
+                await cancel_deblur_gs_service(
                     CancelDeblurGS.model_validate(dto_data)
                 )
             else:

@@ -20,7 +20,6 @@ class WebsocketClient:
         self._session_type = session_type
 
     async def send(self, dto: BaseWebSocketDTO):
-        logger.info(dto)
         logger.info(dto.model_dump(mode="json"))
         await self._websocket.send_json(dto.model_dump(mode="json"))
 

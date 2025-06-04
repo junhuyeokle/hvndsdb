@@ -3,8 +3,8 @@ channels:
   - defaults
 dependencies:
   - python=3.12
+  - opencv
   - pip
   - pip:
       - numpy
-      - opencv-python
       - pycolmap

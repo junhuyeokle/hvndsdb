@@ -66,11 +66,11 @@ namespace Main
     }
 
     [Serializable]
-    public class StartSessionCompleteDto
+    public class SessionReadyDTO
     {
         public string session_id;
 
-        public StartSessionCompleteDto(string session_id)
+        public SessionReadyDTO(string session_id)
         {
             this.session_id = session_id;
         }
@@ -193,9 +193,9 @@ namespace Main
             }
             await WebSocket.SendText(
                 JsonUtility.ToJson(
-                    new WebSocketBaseDto<StartSessionCompleteDto>(
-                        "start_session_complete", 
-                        new StartSessionCompleteDto(data.session_id))));
+                    new WebSocketBaseDto<SessionReadyDTO>(
+                        "session_ready", 
+                        new SessionReadyDTO(data.session_id))));
         }
 
         private async void Start()

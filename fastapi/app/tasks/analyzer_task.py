@@ -4,12 +4,15 @@ import os
 import shutil
 import uuid
 
-from downloader import download_file_from_presigned_url, upload_folder_to_presigned_url, \
-    download_folder_from_presigned_url
+from downloader import (
+    download_file_from_presigned_url,
+    upload_folder_to_presigned_url,
+    download_folder_from_presigned_url,
+)
 from fastapi.logger import logger
 from pyglm import glm
 
-from dtos.base_dto import BaseEndSessionDTO
+from dtos.base_dto import BaseEndSessionDTO, BaseWebSocketDTO
 from tasks import frames_task, colmap_task
 from utils.envs import TEMP
 from utils.s3 import (
@@ -57,7 +60,7 @@ async def run(building_id: str):
                     "application/zip",
                 ),
                 frames_path,
-                TEMP
+                TEMP,
             )
         else:
             await analyzer_manager.update_progress(
@@ -70,7 +73,7 @@ async def run(building_id: str):
             await download_folder_from_presigned_url(
                 get_presigned_download_url(building_id + "/frames.zip"),
                 frames_path,
-                TEMP
+                TEMP,
             )
 
         if not await colmap_task.run(colmap_path, frames_path, building_id):
@@ -80,36 +83,30 @@ async def run(building_id: str):
                     "application/zip",
                 ),
                 colmap_path,
-                TEMP
+                TEMP,
             )
         else:
             await analyzer_manager.update_progress(
                 building_id, "COLMAP extraction failed."
             )
             return
-    try:
-        deblur_gs_client_id = await deblur_gs_manager.start_session(building_id)
-        logger.info(deblur_gs_client_id)
-        deblur_gs_session = deblur_gs_manager.get_client(
-            deblur_gs_client_id
-        ).get_session(building_id)
-        logger.info(deblur_gs_session)
-        center_session_id = (
-                "unity-center-" + building_id + "-" + uuid.uuid4().hex
-        )
-        around_session_id = (
-                "unity-around-" + building_id + "-" + uuid.uuid4().hex
-        )
-        center_client_id = await unity_manager.start_session(center_session_id)
-        around_client_id = await unity_manager.start_session(around_session_id)
-        center_session = unity_manager.get_client(center_client_id).get_session(
-            center_session_id
-        )
-        around_session = unity_manager.get_client(around_client_id).get_session(
-            around_session_id
-        )
-    except Exception as e:
-        logger.error(f"Error starting sessions: {e}")
+
+    deblur_gs_client_id = await deblur_gs_manager.start_session(building_id)
+    logger.info(deblur_gs_client_id)
+    deblur_gs_session = deblur_gs_manager.get_client(
+        deblur_gs_client_id
+    ).get_session(building_id)
+    logger.info(deblur_gs_session)
+    center_session_id = "unity-center-" + building_id + "-" + uuid.uuid4().hex
+    around_session_id = "unity-around-" + building_id + "-" + uuid.uuid4().hex
+    center_client_id = await unity_manager.start_session(center_session_id)
+    around_client_id = await unity_manager.start_session(around_session_id)
+    center_session = unity_manager.get_client(center_client_id).get_session(
+        center_session_id
+    )
+    around_session = unity_manager.get_client(around_client_id).get_session(
+        around_session_id
+    )
 
     async def update_deblur_gs_progress():
         try:
@@ -264,10 +261,16 @@ async def run(building_id: str):
         pass
 
     await unity_manager.get_client(center_client_id).end_session(
-        center_session_id, BaseEndSessionDTO(session_id=center_session_id)
+        center_session_id,
+        BaseWebSocketDTO[BaseEndSessionDTO](
+            data=BaseEndSessionDTO(session_id=center_session_id)
+        ),
     )
     await unity_manager.get_client(around_client_id).end_session(
-        around_session_id, BaseEndSessionDTO(session_id=around_session_id)
+        around_session_id,
+        BaseWebSocketDTO[BaseEndSessionDTO](
+            data=BaseEndSessionDTO(session_id=around_session_id)
+        ),
     )
 
     logger.info("Analyzer worker finished.")

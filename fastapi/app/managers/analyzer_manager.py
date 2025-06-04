@@ -40,6 +40,7 @@ class AnalyzerClient(WebsocketClient):
 class AnalyzerSession(WebsocketSession):
     def __init__(self, session_id: str, client: AnalyzerClient):
         super().__init__(session_id, client)
+        self.set_ready()
 
 
 class AnalyzerManager(WebSocketManager):
