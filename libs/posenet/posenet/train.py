@@ -6,9 +6,9 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from model import PoseNet
-from dataset import PoseDataset
-from posenet_checkpoint import save_checkpoint, load_checkpoint
+from .model import PoseNet
+from .dataset import PoseDataset
+from .posenet_checkpoint import save_checkpoint, load_checkpoint
 
 def find_csv_path(base_path):
     for root, dirs, files in os.walk(base_path):
