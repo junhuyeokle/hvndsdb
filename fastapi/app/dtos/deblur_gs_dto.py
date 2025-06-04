@@ -1,20 +1,47 @@
-from typing import Optional
-from pydantic import BaseModel
+from typing import Optional, ClassVar
+
+from dtos.base_dto import (
+    BaseStartSessionDTO,
+    BaseSessionDataDTO,
+)
 
 
-class StartDeblurGSDTO(BaseModel):
+class StartSessionDTO(BaseStartSessionDTO):
     frames_url: str
     colmap_url: str
     deblur_gs_url: Optional[str] = None
 
 
-class UploadDeblurGSDTO(BaseModel):
+class CancelSessionDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "cancel_session"
+
+
+class CancelSessionCompleteDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "cancel_session_complete"
+
+
+class UploadDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "upload"
     deblur_gs_url: str
 
 
-class UpdateDeblurGSProgressDTO(BaseModel):
+class UploadCompleteDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "upload_complete"
+
+
+class ProgressDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "progress"
     progress: str
 
 
-class PLYUrlDTO(BaseModel):
+class PLYUrlRequestDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "ply_url_request"
+
+
+class PLYUrlResponseDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "ply_url_response"
     ply_url: str
+
+
+class CompleteDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "complete"

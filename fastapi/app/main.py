@@ -1,24 +1,25 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.logger import logger
 from fastapi.middleware.cors import CORSMiddleware
+
 import utils.database as database
-
-# necessary to import all models to register them with SQLAlchemy
-import entities
-
+from routers.analyzer_router import analyzer_router
+from routers.building_router import building_router
+from routers.deblur_gs_router import deblur_gs_router
+from routers.unity_router import unity_router
+from routers.user_router import user_router
 from utils.exception import (
     CustomException,
     custom_exception_handler,
     validation_exception_handler,
 )
-from routers.analyzer_router import analyzer_router
-from routers.deblur_gs_router import deblur_gs_router
-from routers.unity_router import unity_router
-from routers.building_router import building_router
-from routers.user_router import user_router
 
-from fastapi.logger import logger
-import logging
+# necessary to import all models to register them with SQLAlchemy
+import entities
+import managers
 
 
 class LineTruncatingFormatter(logging.Formatter):
@@ -46,10 +47,11 @@ logger.setLevel(logging.INFO)
 
 if not logger.hasHandlers():
     handler = logging.StreamHandler()
-    formatter = LineTruncatingFormatter("%(message)s")
+    formatter = LineTruncatingFormatter(
+        "%(filename)s.%(funcName)s():%(lineno)d %(message)s"
+    )
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-
 
 app = FastAPI()
 

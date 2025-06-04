@@ -1,12 +1,11 @@
-from dtos.analyzer_dto import StartAnalyzerDTO
-from managers import analyzer_manager
+from dtos.analyzer_dto import StopDeblurGSDTO
+from dtos.base_dto import BaseStartSessionDTO
+from managers import analyzer_manager, deblur_gs_manager
 
 
-async def start_service(client_id: str, dto: StartAnalyzerDTO):
-    await analyzer_manager.start(dto.building_id, client_id)
+def start_session_service(dto: BaseStartSessionDTO):
+    analyzer_manager.start_analyzer(dto.session_id)
 
 
-async def stop_deblur_gs_service(client_id: str):
-    await analyzer_manager.stop_deblur_gs(
-        analyzer_manager.get_shared_data(client_id)["building_id"]
-    )
+async def stop_deblur_gs_service(dto: StopDeblurGSDTO):
+    await deblur_gs_manager.cancel_session(dto.session_id)

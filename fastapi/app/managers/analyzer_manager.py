@@ -1,84 +1,89 @@
 import asyncio
-from typing import Dict, Set, Tuple
-from dtos.analyzer_dto import AroundFrameDTO, CenterFrameDTO
+
+from dtos.analyzer_dto import (
+    AroundFrameDTO,
+    CenterFrameDTO,
+    ProgressDTO,
+)
 from dtos.base_dto import BaseWebSocketDTO
-from managers.web_socket_manager import WebSocketManager
+from managers.web_socket_manager import (
+    WebSocketManager,
+    WebsocketSession,
+    WebsocketClient,
+)
+from tasks import analyzer_task
+
+
+class AnalyzerClient(WebsocketClient):
+    async def update_progress(self, building_id: str, progress: str):
+        await self.send(
+            BaseWebSocketDTO[ProgressDTO](
+                data=ProgressDTO(progress=progress, session_id=building_id)
+            )
+        )
+
+    async def update_center_frame(self, building_id: str, frame: str):
+        await self.send(
+            BaseWebSocketDTO[CenterFrameDTO](
+                data=CenterFrameDTO(frame=frame, session_id=building_id)
+            )
+        )
+
+    async def update_around_frame(self, building_id: str, frame: str):
+        await self.send(
+            BaseWebSocketDTO[AroundFrameDTO](
+                data=AroundFrameDTO(frame=frame, session_id=building_id)
+            )
+        )
+
+    async def has_session(self, building_id: str) -> bool:
+        return building_id in self._sessions
+
+
+class AnalyzerSession(WebsocketSession):
+    def __init__(self, session_id: str, client: AnalyzerClient):
+        super().__init__(session_id, client)
 
 
 class AnalyzerManager(WebSocketManager):
     def __init__(self):
-        super().__init__()
-        self.buildings: Dict[str, Tuple[asyncio.Task, Set[str]]] = {}
+        super().__init__(AnalyzerClient, AnalyzerSession)
+        self._analyzers: dict[str, asyncio.Task] = {}
 
-    async def start(self, building_id: str, client_id: str):
-        if building_id not in self.buildings:
-            from workers import analyzer_worker
+    def start_analyzer(self, building_id: str):
+        if building_id in self._analyzers:
+            raise LookupError(f"Analyzer {building_id} already exists")
 
-            self.buildings[building_id] = (
-                asyncio.create_task(analyzer_worker.run(building_id)),
-                set(),
-            )
-
-            def on_done_callback(_, building_id=building_id):
-                client_ids = self.buildings.pop(building_id, (None, set()))[1]
-                for client_id in client_ids:
-                    asyncio.create_task(self.disconnect(client_id))
-
-            self.buildings[building_id][0].add_done_callback(on_done_callback)
-
-        if "building_id" in self.get_shared_data(client_id):
-            raise LookupError(
-                f"Client {client_id} already has a building associated."
-            )
-
-        self.set_shared_data(client_id, "building_id", building_id)
-        self.buildings[building_id][1].add(client_id)
-
-    async def stop_deblur_gs(self, building_id: str):
-        from managers import deblur_gs_manager
-
-        await deblur_gs_manager.stop(
-            deblur_gs_manager.building_to_client[building_id]
+        self._analyzers[building_id] = asyncio.create_task(
+            analyzer_task.run(building_id)
         )
 
+    def get_analyzer(self, building_id: str) -> asyncio.Task:
+        analyzer = self._analyzers.get(building_id)
+        if not analyzer:
+            raise LookupError(f"No analyzer found {building_id}")
+
+        return analyzer
+
+    async def end_analyzer(self, building_id: str):
+        analyzer = self._analyzers.pop(building_id)
+        if not analyzer:
+            raise LookupError(f"No analyzer found {building_id}")
+
+        self._analyzers[building_id].cancel()
+        await self._analyzers[building_id]
+
     async def update_progress(self, building_id: str, progress: str):
-        client_ids = self.buildings.get(building_id, (None, set()))[1]
-        for client_id in client_ids:
-            await self.send(
-                client_id,
-                BaseWebSocketDTO[str](
-                    type="progress",
-                    data=progress,
-                ),
-            )
+        for client in self._clients.values():
+            if not client.has_session(building_id):
+                await client.update_progress(building_id, progress)
 
     async def update_center_frame(self, building_id: str, frame: str):
-        client_ids = self.buildings.get(building_id, (None, set()))[1]
-        for client_id in client_ids:
-            await self.send(
-                client_id,
-                BaseWebSocketDTO[CenterFrameDTO](
-                    type="frame",
-                    data=CenterFrameDTO(frame=frame),
-                ),
-            )
+        for client in self._clients.values():
+            if not client.has_session(building_id):
+                await client.update_center_frame(building_id, frame)
 
     async def update_around_frame(self, building_id: str, frame: str):
-        client_ids = self.buildings.get(building_id, (None, set()))[1]
-        for client_id in client_ids:
-            await self.send(
-                client_id,
-                BaseWebSocketDTO[AroundFrameDTO](
-                    type="frame", data=AroundFrameDTO(frame=frame)
-                ),
-            )
-
-    async def disconnect(self, client_id: str):
-        shared = self.get_shared_data(client_id)
-        if not shared:
-            return
-        building_id = shared.pop("building_id", None)
-        if building_id and building_id in self.buildings:
-            self.buildings[building_id][1].discard(client_id)
-
-        await super().disconnect(client_id)
+        for client in self._clients.values():
+            if not client.has_session(building_id):
+                await client.update_around_frame(building_id, frame)

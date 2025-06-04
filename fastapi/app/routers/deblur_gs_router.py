@@ -1,19 +1,25 @@
 import json
 import uuid
+
 from fastapi import APIRouter, WebSocket
 from fastapi.logger import logger
 
-from utils.authorization import is_valid_timestamp, verify_hmac
-from dtos.base_dto import BaseWebSocketDTO
-from dtos.deblur_gs_dto import UpdateDeblurGSProgressDTO
+from dtos.deblur_gs_dto import (
+    ProgressDTO,
+    UploadCompleteDTO,
+    PLYUrlRequestDTO,
+    CancelSessionCompleteDTO,
+    CompleteDTO,
+)
 from managers import deblur_gs_manager
 from services.deblur_gs_service import (
     complete_service,
-    ply_url_service,
-    stop_complete_service,
-    update_progress_service,
+    ply_url_request_service,
+    cancel_complete_service,
+    progress_service,
     upload_complete_service,
 )
+from utils.authorization import is_valid_timestamp, verify_hmac
 
 deblur_gs_router = APIRouter()
 
@@ -34,25 +40,41 @@ async def deblur_gs_route(websocket: WebSocket):
         return
 
     client_id = "deblur_gs-" + websocket.client.host + "-" + uuid.uuid4().hex
-    await deblur_gs_manager.accept(client_id, websocket)
+    await deblur_gs_manager.start_client(client_id, websocket)
 
     try:
         while True:
-            dto = BaseWebSocketDTO(**json.loads(await websocket.receive_text()))
-            logger.info(f"Received {client_id}\n{dto}")
-            if dto.type == "complete":
-                await complete_service(client_id=client_id)
-            if dto.type == "upload_complete":
-                await upload_complete_service(client_id=client_id)
-            if dto.type == "update_progress":
-                await update_progress_service(
-                    client_id=client_id,
-                    dto=UpdateDeblurGSProgressDTO.model_validate(dto.data),
-                )
-            if dto.type == "ply_url":
-                await ply_url_service(client_id=client_id)
-            if dto.type == "stop_complete":
-                await stop_complete_service(client_id=client_id)
+            message = json.loads(await websocket.receive_text())
+            dto_type = message["type"]
+            dto_data = message.get("data", {})
 
-    except Exception:
-        await deblur_gs_manager.disconnect(client_id)
+            if dto_type == CompleteDTO:
+                await complete_service(
+                    client_id=client_id,
+                    dto=CompleteDTO.model_validate(dto_data),
+                )
+            elif dto_type == UploadCompleteDTO.type:
+                await upload_complete_service(
+                    client_id=client_id,
+                    dto=UploadCompleteDTO.model_validate(dto_data),
+                )
+            elif dto_type == ProgressDTO.type:
+                await progress_service(
+                    client_id=client_id,
+                    dto=ProgressDTO.model_validate(dto_data),
+                )
+            elif dto_type == PLYUrlRequestDTO.type:
+                await ply_url_request_service(
+                    client_id=client_id,
+                    dto=PLYUrlRequestDTO.model_validate(dto_data),
+                )
+            elif dto_type == CancelSessionCompleteDTO.type:
+                await cancel_complete_service(
+                    client_id=client_id,
+                    dto=CancelSessionCompleteDTO.model_validate(dto_data),
+                )
+            else:
+                logger.warning(f"Unknown DTO type: {dto_type}")
+    except Exception as e:
+        logger.error(e)
+        await deblur_gs_manager.end_client(client_id)

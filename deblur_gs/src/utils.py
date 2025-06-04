@@ -1,9 +1,10 @@
 import hashlib
 import hmac
-import os
 import re
 import shutil
+import uuid
 import zipfile
+
 import aiohttp
 
 from envs import TEMP
@@ -14,7 +15,7 @@ def generate_hmac_signature(ts: str, key: str) -> str:
 
 
 async def download_folder_from_presigned_url(url: str, path: str):
-    zip_path = os.path.join(TEMP, "temp.zip")
+    zip_path = os.path.join(TEMP, uuid.uuid4().hex + ".zip")
 
     print(f"Downloading\nFrom: {url}\nTo: {zip_path}")
 
@@ -36,7 +37,7 @@ async def download_folder_from_presigned_url(url: str, path: str):
 
 
 async def upload_folder_to_presigned_url(url: str, path: str):
-    zip_path = os.path.join(TEMP, "temp.zip")
+    zip_path = os.path.join(TEMP, uuid.uuid4().hex + ".zip")
 
     print(f"Zipping\nFrom: {path}\nTo: {zip_path}")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
@@ -69,21 +70,21 @@ async def upload_file_to_presigned_url(url: str, path: str, content_type: str):
 import os
 
 
-def get_last_point_cloud(base_path: str):
+def get_last_ply_folder(ply_path: str):
     try:
-        subdirs = []
-        for name in os.listdir(base_path):
-            full_path = os.path.join(base_path, name)
+        sub_dirs = []
+        for name in os.listdir(ply_path):
+            full_path = os.path.join(ply_path, name)
             if os.path.isdir(full_path):
                 parts = name.rsplit("_", 1)
                 if len(parts) == 2 and parts[1].isdigit():
-                    subdirs.append((int(parts[1]), full_path))
+                    sub_dirs.append((int(parts[1]), full_path))
 
-        if not subdirs:
+        if not sub_dirs:
             return None
 
-        subdirs.sort(key=lambda x: x[0])
-        return subdirs[-1][1]
+        sub_dirs.sort(key=lambda x: x[0])
+        return sub_dirs[-1][1]
     except FileNotFoundError:
         return None
 

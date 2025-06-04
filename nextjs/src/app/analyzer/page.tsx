@@ -5,17 +5,18 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 
-type StartData = { building_id: string };
-type AroundFrameData = { frame: string; frame_id: "around" };
-type CenterFrameData = { frame: string; frame_id: "center" };
+type StartSessionData = { session_id: string };
+type AroundFrameData = { frame: string };
+type CenterFrameData = { frame: string };
 
 type ClientMessage =
-  | { type: "start"; data: StartData }
+  | { type: "start_session"; data: StartSessionData }
   | { type: "stop_deblur_gs"; data: null };
 
 type ServerMessage =
   | { type: "progress"; data: string }
-  | { type: "frame"; data: AroundFrameData | CenterFrameData }
+  | { type: "around_frame"; data: AroundFrameData }
+  | { type: "center_frame"; data: CenterFrameData }
   | { type: string; data: null };
 
 export default function AnalyzerPage() {
@@ -53,7 +54,7 @@ export default function AnalyzerPage() {
     ws.current.onopen = () => {
       console.log("WebSocket connected");
       setIsConnected(true);
-      sendMessage({ type: "start", data: { building_id: buildingId } });
+      sendMessage({ type: "start_session", data: { session_id: buildingId } });
     };
 
     ws.current.onmessage = (event: MessageEvent<string>) => {
@@ -67,18 +68,19 @@ export default function AnalyzerPage() {
             }
             break;
 
-          case "frame":
+          case "around_frame":
             if (message.data && typeof message.data === "object") {
-              const frameData = message.data as
-                | AroundFrameData
-                | CenterFrameData;
+              const frameData = message.data as AroundFrameData;
               const base64Url = `data:image/jpeg;base64,${frameData.frame}`;
+              setAroundImage(base64Url);
+            }
+            break;
 
-              if (frameData.frame_id === "around") {
-                setAroundImage(base64Url);
-              } else if (frameData.frame_id === "center") {
-                setCenterImage(base64Url);
-              }
+          case "center_frame":
+            if (message.data && typeof message.data === "object") {
+              const frameData = message.data as CenterFrameData;
+              const base64Url = `data:image/jpeg;base64,${frameData.frame}`;
+              setCenterImage(base64Url);
             }
             break;
 

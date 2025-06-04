@@ -1,15 +1,16 @@
 import json
 import uuid
-from fastapi import APIRouter, WebSocket
 
-from dtos.analyzer_dto import StartAnalyzerDTO
-from dtos.base_dto import BaseWebSocketDTO
+from fastapi import APIRouter, WebSocket
+from fastapi.logger import logger
+
+from dtos.analyzer_dto import StopDeblurGSDTO
+from dtos.base_dto import BaseStartSessionDTO
 from managers import analyzer_manager
 from services.analyzer_service import (
-    start_service,
+    start_session_service,
     stop_deblur_gs_service,
 )
-from fastapi.logger import logger
 
 analyzer_router = APIRouter()
 
@@ -17,18 +18,24 @@ analyzer_router = APIRouter()
 @analyzer_router.websocket("")
 async def analyzer_route(websocket: WebSocket):
     client_id = "analyzer-" + websocket.client.host + "-" + uuid.uuid4().hex
-    await analyzer_manager.accept(client_id, websocket)
+    await analyzer_manager.start_client(client_id, websocket)
 
     try:
         while True:
-            dto = BaseWebSocketDTO(**json.loads(await websocket.receive_text()))
-            logger.info(f"Received {client_id}\n{dto}")
-            if dto.type == "start":
-                await start_service(
-                    client_id, StartAnalyzerDTO.model_validate(dto.data)
-                )
-            if dto.type == "stop_deblur_gs":
-                await stop_deblur_gs_service(client_id)
+            message = json.loads(await websocket.receive_text())
+            dto_type = message["type"]
+            dto_data = message.get("data", {})
 
-    except Exception:
-        await analyzer_manager.disconnect(client_id)
+            if dto_type == BaseStartSessionDTO.type:
+                start_session_service(
+                    BaseStartSessionDTO.model_validate(dto_data)
+                )
+            elif dto_type == StopDeblurGSDTO.type:
+                await stop_deblur_gs_service(
+                    StopDeblurGSDTO.model_validate(dto_data)
+                )
+            else:
+                logger.error(f"Unknown DTO type: {dto_type}")
+    except Exception as e:
+        logger.error(e)
+        await analyzer_manager.end_client(client_id)

@@ -1,109 +1,84 @@
 import asyncio
-import os
-from typing import Optional
-from dtos.base_dto import BaseWebSocketDTO
-from dtos.deblur_gs_dto import StartDeblurGSDTO
-from managers.web_socket_manager import WebSocketManager
+
+from dtos.base_dto import BaseWebSocketDTO, BaseEndSessionDTO
+from dtos.deblur_gs_dto import CancelSessionDTO, StartSessionDTO
+from managers.web_socket_manager import (
+    WebSocketManager,
+    WebsocketClient,
+    WebsocketSession,
+)
 from utils.s3 import get_presigned_download_url, is_key_exists
 
 
-class DeblurGSManager(WebSocketManager):
-    def __init__(self):
-        super().__init__()
-        self.building_to_client: dict[str, str] = {}
-
-    async def start(self, building_id: str, client_id: Optional[str] = None):
-        if not client_id:
-            if not self.connections:
-                raise RuntimeError("No client connected to start deblur GS.")
-            client_id = next(iter(self.connections))
-
-        if building_id in self.building_to_client:
-            raise ValueError(
-                f"Building {building_id} is already associated with a client."
-            )
-
-        if "building_id" in self.get_shared_data(client_id):
-            raise ValueError(
-                f"Client {client_id} is already associated with a building."
-            )
-
-        self.set_shared_data(client_id, "building_id", building_id)
-        self.set_shared_data(client_id, "progress_queue", asyncio.Queue())
-
-        self.building_to_client[building_id] = client_id
-
+class DeblurGSClient(WebsocketClient):
+    async def cancel_session(self, building_id: str):
+        await self.get_session(building_id).put_progress(None)
         await self.send(
-            client_id,
-            BaseWebSocketDTO[StartDeblurGSDTO](
-                type="start",
-                data=StartDeblurGSDTO(
-                    frames_url=get_presigned_download_url(
-                        building_id + "/frames.zip"
-                    ),
-                    colmap_url=get_presigned_download_url(
-                        building_id + "/colmap.zip"
-                    ),
-                    deblur_gs_url=(
-                        get_presigned_download_url(
-                            building_id + "/deblur_gs.zip"
-                        )
-                        if is_key_exists(
-                            os.path.join(building_id, "deblur_gs.zip")
-                        )
-                        else None
-                    ),
-                ),
+            BaseWebSocketDTO[CancelSessionDTO](
+                data=CancelSessionDTO(session_id=building_id)
             ),
         )
 
-    async def complete(self, client_id: str):
-        shared = self.get_shared_data(client_id)
-        building_id = shared.pop("building_id", None)
-        progress_queue: asyncio.Queue = shared.pop("progress_queue", None)
+    async def end_session(self, building_id: str, dto: BaseEndSessionDTO):
+        await self.get_session(building_id).put_progress(None)
+        await super().end_session(building_id, dto)
 
-        if not building_id or not progress_queue:
-            raise LookupError(
-                f"Client {client_id} has no building or progress queue."
-            )
+    async def has_session(self, building_id: str) -> bool:
+        return building_id in self._sessions
 
-        await progress_queue.put(None)
-        self.building_to_client.pop(building_id, None)
 
-    async def disconnect(self, client_id: str):
-        await self.complete(client_id)
-        await super().disconnect(client_id)
+class DeblurGSSession(WebsocketSession):
+    def __init__(self, session_id: str, client: DeblurGSClient):
+        super().__init__(session_id, client)
+        self._progress: asyncio.Queue = asyncio.Queue()
 
-    async def update_progress(self, client_id: str, progress: str):
-        shared = self.get_shared_data(client_id)
-        progress_queue: asyncio.Queue = shared.get("progress_queue")
+    async def put_progress(self, progress: str | None):
+        await self._progress.put(progress)
 
-        if not progress_queue:
-            raise LookupError(
-                f"Client {client_id} has no active progress queue."
-            )
-
-        await progress_queue.put(progress)
-
-    async def get_progress(self, client_id: str):
-        progress_queue: asyncio.Queue = self.get_shared_data(client_id).get(
-            "progress_queue"
-        )
-
-        if not progress_queue:
-            raise LookupError(
-                f"Client {client_id} has no active progress queue."
-            )
-
-        progress = await progress_queue.get()
+    async def get_progress(self):
+        progress = await self._progress.get()
 
         if progress is None:
             raise StopAsyncIteration
 
         return progress
 
-    async def stop(self, client_id: str):
-        await self.send(
-            client_id,
-            BaseWebSocketDTO[None](type="stop", data=None),
+
+class DeblurGSManager(WebSocketManager):
+    def __init__(self):
+        super().__init__(DeblurGSClient, DeblurGSSession)
+
+    async def start_session(self, building_id: str) -> str:
+        for client_id in self._clients.keys():
+            if self.get_client(client_id).has_session(building_id):
+                return client_id
+
+        client_id = next(iter(self._clients.keys()))
+
+        await self.get_client(client_id).start_session(
+            building_id,
+            StartSessionDTO(
+                session_id=building_id,
+                frames_url=get_presigned_download_url(
+                    building_id + "/frames.zip"
+                ),
+                colmap_url=get_presigned_download_url(
+                    building_id + "/colmap.zip"
+                ),
+                deblur_gs_url=(
+                    get_presigned_download_url(building_id + "/deblur_gs.zip")
+                    if is_key_exists(building_id + "/deblur_gs.zip")
+                    else None
+                ),
+            ),
         )
+
+        return client_id
+
+    async def cancel_session(self, building_id: str):
+        for client in self._clients.values():
+            if client.has_session(building_id):
+                await client.cancel_session(building_id)
+                return
+
+        raise LookupError(f"No session found {building_id}")

@@ -19,13 +19,11 @@ async def run(sample_path: str, frames_path: str, building_id: str):
         line = await process.stdout.readline()
         if not line:
             break
-        await analyzer_manager.update_progress(
-            building_id, line.decode().strip()
-        )
+        await analyzer_manager.put_progress(building_id, line.decode().strip())
 
     result = await process.wait()
 
-    logger.info("Frames worker finished.")
+    logger.info("Frames task finished.")
 
     return result
 

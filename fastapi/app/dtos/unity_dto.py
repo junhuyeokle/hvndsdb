@@ -1,37 +1,31 @@
-from pydantic import BaseModel
+from typing import ClassVar
+
+from dtos.base_dto import BaseSessionDataDTO
 
 
-class StartSessionDTO(BaseModel):
-    session_id: str
+class CancelSessionDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "cancel_session"
 
 
-class StartSessionCompleteDTO(BaseModel):
-    session_id: str
-
-
-class FrameDTO(BaseModel):
-    session_id: str
+class FrameDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "frame"
     frame: str
 
 
-class StopSessionDTO(BaseModel):
-    session_id: str
-
-
-class SetPlyDTO(BaseModel):
+class SetPlyDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "set_ply"
     ply_url: str
-    session_id: str
 
 
-class SetCameraPositionDTO(BaseModel):
-    session_id: str
+class SetCameraPositionDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "set_camera_position"
     x: float
     y: float
     z: float
 
 
-class SetCameraRotationDTO(BaseModel):
-    session_id: str
+class SetCameraRotationDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "set_camera_rotation"
     x: float
     y: float
     z: float

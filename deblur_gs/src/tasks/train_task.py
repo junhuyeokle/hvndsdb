@@ -2,22 +2,24 @@ import asyncio
 import os
 import subprocess
 
+from dto import BaseWebSocketDTO, CompleteDTO
 from envs import VISDOM_HOST, VISDOM_PORT
+from globals import deblur_gs_client
 from utils import get_last_checkpoint
-from dto import UpdateDeblurGSProgressDTO, BaseWebSocketDTO
 
-ITERATION = 10000
-SAVE_POINT_CLOUD_INTERVAL = 50
+ITERATION = 100000
+SAVE_POINT_CLOUD_INTERVAL = 20
 SAVE_CHECKPOINT_INTERVAL = 100
 
 
 async def run(
-    send_queue: asyncio.Queue,
-    colmap_path: str,
-    frames_path: str,
-    deblur_gs_path: str,
-    iteration: int = ITERATION,
+        session_id: str,
+        colmap_path: str,
+        frames_path: str,
+        deblur_gs_path: str,
+        iteration: int = ITERATION,
 ):
+    loop = asyncio.get_running_loop()
     process = None
     try:
         cmd = [
@@ -41,8 +43,6 @@ async def run(
             "--visdom_port",
             str(VISDOM_PORT),
         ]
-
-        print(" ".join(cmd))
 
         start_checkpoint = get_last_checkpoint(deblur_gs_path)
         if start_checkpoint is not None:
@@ -75,11 +75,7 @@ async def run(
             ],
         ]
 
-        print(" ".join(cmd))
-
-        loop = asyncio.get_running_loop()
-
-        def launch_process():
+        def process():
             return subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
@@ -88,19 +84,19 @@ async def run(
                 bufsize=1,
             )
 
-        process = await loop.run_in_executor(None, launch_process)
+        process = await loop.run_in_executor(None, process)
+        session = deblur_gs_client.get_session(session_id)
 
         while process.poll() is None:
             line = await loop.run_in_executor(None, process.stdout.readline)
             line = line.strip()
-            await send_queue.put(
-                BaseWebSocketDTO[UpdateDeblurGSProgressDTO](
-                    type="update_progress",
-                    data=UpdateDeblurGSProgressDTO(progress=line),
-                ).json()
-            )
+            await session.update_progress(line)
 
-        await send_queue.put(BaseWebSocketDTO[None](type="complete").json())
+        await deblur_gs_client.send(
+            BaseWebSocketDTO[CompleteDTO](
+                data=CompleteDTO(session_id=session_id)
+            )
+        )
     except asyncio.CancelledError:
         print("Train worker cancelled")
         if process and process.poll() is None:

@@ -1,11 +1,12 @@
-from datetime import datetime
 import os
-from typing import Optional
+import uuid
 import zipfile
+from datetime import datetime
+
 import aiohttp
 import boto3
-import botocore
 from fastapi.logger import logger
+
 from utils.envs import (
     AWS_ACCESS_KEY,
     AWS_REGION,
@@ -13,7 +14,6 @@ from utils.envs import (
     S3_BUCKET_NAME,
     TEMP,
 )
-
 
 s3_client = boto3.client(
     "s3",
@@ -47,12 +47,12 @@ def get_presigned_download_url(key: str) -> str:
 
 
 async def download_folder_from_presigned_url(url: str, path: str):
-    zip_path = os.path.join(TEMP, "temp.zip")
+    zip_path = os.path.join(TEMP, uuid.uuid4().hex + ".zip")
 
     await download_file_from_presigned_url(url, zip_path)
 
     logger.info(f"Unzipping\nFrom: {zip_path}\nTo: {path}")
-    with zipfile.ZipFile(zip_path, "r") as zip_ref:
+    with zipfile.ZipFile(zip_path) as zip_ref:
         zip_ref.extractall(path)
         logger.info(f"Unzipped\nFrom: {zip_path}\nTo: {path}")
 
@@ -73,7 +73,7 @@ async def download_file_from_presigned_url(url: str, path: str):
 
 
 async def upload_folder_to_presigned_url(url: str, path: str):
-    zip_path = os.path.join(TEMP, "temp.zip")
+    zip_path = os.path.join(TEMP, uuid.uuid4().hex + ".zip")
 
     logger.info(f"Zipping\nFrom: {path}\nTo: {zip_path}")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
@@ -99,17 +99,10 @@ def is_key_exists(key: str) -> bool:
     try:
         s3_client.head_object(Bucket=S3_BUCKET_NAME, Key=key)
         return True
-    except botocore.exceptions.ClientError as e:
-        if e.response["Error"]["Code"] == "404":
-            return False
-        else:
-            raise
+    except Exception:
+        return False
 
 
-def get_last_modified(key: str) -> Optional[datetime]:
-    try:
-        response = s3_client.head_object(Bucket=S3_BUCKET_NAME, Key=key)
-        return response["LastModified"]
-    except botocore.exceptions.ClientError as e:
-        if e.response["Error"]["Code"] in "404":
-            return None
+def get_last_modified(key: str) -> datetime:
+    response = s3_client.head_object(Bucket=S3_BUCKET_NAME, Key=key)
+    return response["LastModified"]
