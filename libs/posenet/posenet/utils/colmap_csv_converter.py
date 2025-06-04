@@ -1,5 +1,5 @@
 import os
-from utils.colmap_to_csv import parse_images_txt, write_csv
+from .colmap_to_csv import parse_images_txt, write_csv
 
 def convert_colmap_to_csv(colmap_root, frames_root):
     images_txt = None
