@@ -11,10 +11,10 @@ def main():
     parser.add_argument('--resume', action='store_true')
     args = parser.parse_args()
 
-    print("📥 Step 1: Convert COLMAP data to CSV")
+    print("Convert COLMAP data to CSV")
     csv_path = convert_colmap_to_csv(args.colmap_root, args.frames_root)
 
-    print("🚀 Step 2: Train PoseNet model")
+    print("Train PoseNet model")
     train_cmd = [
         "python", "train.py",
         "--csv_path", csv_path,
