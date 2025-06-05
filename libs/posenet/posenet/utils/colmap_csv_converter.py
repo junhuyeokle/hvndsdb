@@ -13,13 +13,13 @@ def convert_colmap_to_csv(colmap_root, frames_root):
             break
 
     if not images_txt:
-        raise FileNotFoundError("❌ Could not find 'images.txt' in Colmap structure.")
+        raise FileNotFoundError("Could not find 'images.txt' in Colmap structure.")
 
     if not os.path.exists(frames_root):
-        raise FileNotFoundError(f"❌ Could not find frames folder at {frames_root}")
+        raise FileNotFoundError(f"Could not find frames folder at {frames_root}")
 
     output_csv = os.path.join(colmap_root, 'poses.csv')
     entries = parse_images_txt(images_txt)
     write_csv(entries, output_csv, frames_root)
-    print(f"✅ Colmap data processed to CSV: {output_csv}")
+    print(f"Colmap data processed to CSV: {output_csv}")
     return output_csv
