@@ -9,11 +9,11 @@ def save_checkpoint(model, optimizer, epoch, loss, checkpoint_path):
         'loss': loss,
     }
     torch.save(checkpoint, checkpoint_path)
-    print(f"✅ Checkpoint saved to: {checkpoint_path}")
+    print(f"Checkpoint saved to: {checkpoint_path}")
 
 def load_checkpoint(model, optimizer, checkpoint_path):
     if not os.path.exists(checkpoint_path):
-        print("⚠️ No checkpoint found.")
+        print("No checkpoint found.")
         return model, optimizer, 0
 
     checkpoint = torch.load(checkpoint_path)
