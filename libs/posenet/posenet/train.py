@@ -39,7 +39,7 @@ def train_model(csv_path, output_path, checkpoint_path=None, resume=False):
 
     if resume and checkpoint_path and os.path.exists(checkpoint_path):
         model, optimizer, start_epoch = load_checkpoint(model, optimizer, checkpoint_path)
-        print(f"✅ Resumed from checkpoint at epoch {start_epoch}")
+        print(f"Resumed from checkpoint at epoch {start_epoch}")
 
     model.train()
     for epoch in range(start_epoch, epochs):
@@ -63,7 +63,7 @@ def train_model(csv_path, output_path, checkpoint_path=None, resume=False):
 
     model_save_path = os.path.join(output_path, 'trained_posenet.pth')
     torch.save(model.state_dict(), model_save_path)
-    print(f"✅ PoseNet model saved to: {model_save_path}")
+    print(f"PoseNet model saved to: {model_save_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train PoseNet with optional checkpointing")
