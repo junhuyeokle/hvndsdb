@@ -1,0 +1,60 @@
+# .gitignore for PoseNet project
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+MANIFEST
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+.coverage
+.cache
+.pytest_cache/
+
+# Environments
+.env
+.venv
+venv/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# LSP config files
+pyrightconfig.json
+
+# CUDA / PyTorch specific
+*.ptx
+*.cubin
+*.fatbin
+*.pth
+*.onnx
+*.log
+
+# PoseNet specific
+logs/
+checkpoints/
+output/
+*.ckpt
+*.csv
+
+# VS Code
+.vscode/
+
+# Temporary or generated files
+temp_posenet/
