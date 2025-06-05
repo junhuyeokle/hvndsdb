@@ -20,5 +20,5 @@ def load_checkpoint(model, optimizer, checkpoint_path):
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     start_epoch = checkpoint['epoch'] + 1
-    print(f"✅ Checkpoint loaded from: {checkpoint_path}, resuming at epoch {start_epoch}")
+    print(f"Checkpoint loaded from: {checkpoint_path}, resuming at epoch {start_epoch}")
     return model, optimizer, start_epoch
