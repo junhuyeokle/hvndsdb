@@ -4,13 +4,6 @@ import subprocess
 import os
 
 def main():
-    parser = argparse.ArgumentParser(description="PoseNet Training Pipeline")
-    parser.add_argument('--colmap_root', required=True, help="Path to extracted COLMAP directory (with sparse/0/txts/images.txt)")
-    parser.add_argument('--frames_root', required=True, help="Path to images folder")
-    parser.add_argument('--project_root', default='/content/project')
-    parser.add_argument('--resume', action='store_true')
-    args = parser.parse_args()
-
     print("Convert COLMAP data to CSV")
     csv_path = convert_colmap_to_csv(args.colmap_root, args.frames_root)
 
@@ -27,5 +20,10 @@ def main():
     subprocess.run(train_cmd, check=True)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="PoseNet Training Pipeline")
+    parser.add_argument('--colmap_root', required=True, help="Path to extracted COLMAP directory (with sparse/0/txts/images.txt)")
+    parser.add_argument('--frames_root', required=True, help="Path to images folder")
+    parser.add_argument('--project_root', default='/content/project')
+    parser.add_argument('--resume', action='store_true')
+    args = parser.parse_args()
     main()
-
