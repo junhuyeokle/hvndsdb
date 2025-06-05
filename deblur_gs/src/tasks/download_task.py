@@ -1,8 +1,12 @@
 import asyncio
+from typing import Optional
 
 
 async def run(
-        session_id: str, frames_url: str, colmap_url: str, deblur_gs_url: str
+        session_id: str,
+        frames_url: str,
+        colmap_url: str,
+        deblur_gs_url: Optional[str] = None,
 ):
     from envs import TEMP
     import subprocess
@@ -17,8 +21,9 @@ async def run(
         TEMP,
         frames_url,
         colmap_url,
-        deblur_gs_url,
     ]
+    if deblur_gs_url:
+        cmd.append(deblur_gs_url)
 
     def process():
         return subprocess.Popen(

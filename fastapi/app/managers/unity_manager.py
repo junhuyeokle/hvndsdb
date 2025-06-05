@@ -6,7 +6,6 @@ from dtos.base_dto import (
     BaseStartSessionDTO,
 )
 from dtos.unity_dto import (
-    CancelSessionDTO,
     SetCameraPositionDTO,
     SetCameraRotationDTO,
     SetPlyDTO,
@@ -19,18 +18,11 @@ from managers.web_socket_manager import (
 
 
 class UnityClient(WebsocketClient):
-    async def cancel_session(self, session_id: str):
-        await self.send(
-            BaseWebSocketDTO[CancelSessionDTO](
-                data=CancelSessionDTO(session_id=session_id),
-            ),
-        )
-
-        session: UnitySession = self.get_session(session_id)
-        await session.put_frame(None)
+    def get_session_count(self) -> int:
+        return len(self._sessions)
 
     async def end_session(
-        self, session_id: str, dto: BaseWebSocketDTO[BaseEndSessionDTO]
+            self, session_id: str, dto: BaseWebSocketDTO[BaseEndSessionDTO]
     ):
         session: UnitySession = self.get_session(session_id)
         await session.put_frame(None)
@@ -71,29 +63,33 @@ class UnitySession(WebsocketSession):
         await self._frames.put(frame)
 
     async def get_frame(self):
-        frame = await self._frames.get()
-
-        if frame is None:
-            raise StopAsyncIteration
-
-        return frame
+        return await self._frames.get()
 
 
 class UnityManager(WebSocketManager):
     def __init__(self):
         super().__init__(UnityClient, UnitySession)
 
+    def get_client(self, client_id: str) -> UnityClient:
+        return super().get_client(client_id)
+
     async def start_session(self, session_id: str) -> str:
         if not self._clients:
             raise LookupError("No clients connected")
 
-        client_id = next(iter(self._clients.keys()))
+        selected_client_id = next(iter(self._clients.keys()))
+        for client_id in self._clients.keys():
+            if (
+                    self.get_client(client_id).get_session_count()
+                    < self.get_client(selected_client_id).get_session_count()
+            ):
+                selected_client_id = client_id
 
-        await self.get_client(client_id).start_session(
+        await self.get_client(selected_client_id).start_session(
             session_id,
             BaseWebSocketDTO[BaseStartSessionDTO](
                 data=BaseStartSessionDTO(session_id=session_id),
             ),
         )
 
-        return client_id
+        return selected_client_id

@@ -48,6 +48,9 @@ def is_key_exists(key: str) -> bool:
         return False
 
 
-def get_last_modified(key: str) -> datetime:
-    response = s3_client.head_object(Bucket=S3_BUCKET_NAME, Key=key)
-    return response["LastModified"]
+def get_last_modified(key: str) -> datetime | None:
+    try:
+        response = s3_client.head_object(Bucket=S3_BUCKET_NAME, Key=key)
+        return response["LastModified"]
+    except Exception:
+        return None

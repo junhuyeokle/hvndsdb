@@ -1,13 +1,17 @@
 import asyncio
 import os
 from asyncio import CancelledError
+from typing import Optional
 
 from envs import TEMP
 from tasks import download_task, train_task, ply_task
 
 
 async def run(
-    session_id: str, frames_url: str, colmap_url: str, deblur_gs_url: str
+        session_id: str,
+        frames_url: str,
+        colmap_url: str,
+        deblur_gs_url: Optional[str] = None,
 ):
     session_train_task = None
     session_ply_task = None

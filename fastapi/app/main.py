@@ -42,7 +42,6 @@ class LineTruncatingFormatter(logging.Formatter):
 
 
 logger.setLevel(logging.INFO)
-logger.setLevel(logging.INFO)
 
 if not logger.hasHandlers():
     handler = logging.StreamHandler()

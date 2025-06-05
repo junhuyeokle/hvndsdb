@@ -70,16 +70,16 @@ class AnalyzerManager(WebSocketManager):
         return analyzer
 
     async def update_progress(self, building_id: str, progress: str):
-        for client in self._clients.values():
+        for client in list(self._clients.values()):
             if client.has_session(building_id):
                 await client.update_progress(building_id, progress)
 
     async def update_center_frame(self, building_id: str, frame: str):
-        for client in self._clients.values():
+        for client in list(self._clients.values()):
             if client.has_session(building_id):
                 await client.update_center_frame(building_id, frame)
 
     async def update_around_frame(self, building_id: str, frame: str):
-        for client in self._clients.values():
+        for client in list(self._clients.values()):
             if client.has_session(building_id):
                 await client.update_around_frame(building_id, frame)

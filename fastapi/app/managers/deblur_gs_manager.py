@@ -11,8 +11,11 @@ from utils.s3 import get_presigned_download_url, is_key_exists
 
 
 class DeblurGSClient(WebsocketClient):
+    def get_session_count(self) -> int:
+        return len(self._sessions)
+
     async def start_session(
-        self, building_id: str, dto: BaseWebSocketDTO[StartSessionDTO]
+            self, building_id: str, dto: BaseWebSocketDTO[StartSessionDTO]
     ):
         await super().start_session(building_id, dto)
 
@@ -39,29 +42,32 @@ class DeblurGSSession(WebsocketSession):
         await self._progress.put(progress)
 
     async def get_progress(self):
-        progress = await self._progress.get()
-
-        if progress is None:
-            raise StopAsyncIteration
-
-        return progress
+        return await self._progress.get()
 
 
 class DeblurGSManager(WebSocketManager):
     def __init__(self):
         super().__init__(DeblurGSClient, DeblurGSSession)
 
+    def get_client(self, client_id: str) -> DeblurGSClient:
+        return super().get_client(client_id)
+
     async def start_session(self, building_id: str) -> str:
         if not self._clients:
             raise LookupError("No clients connected")
 
+        selected_client_id = next(iter(self._clients.keys()))
         for client_id in self._clients.keys():
             if self.get_client(client_id).has_session(building_id):
                 return client_id
 
-        client_id = next(iter(self._clients.keys()))
+            if (
+                    self.get_client(client_id).get_session_count()
+                    < self.get_client(selected_client_id).get_session_count()
+            ):
+                selected_client_id = client_id
 
-        await self.get_client(client_id).start_session(
+        await self.get_client(selected_client_id).start_session(
             building_id,
             BaseWebSocketDTO[StartSessionDTO](
                 data=StartSessionDTO(
@@ -83,7 +89,7 @@ class DeblurGSManager(WebSocketManager):
             ),
         )
 
-        return client_id
+        return selected_client_id
 
     async def cancel_session(self, building_id: str):
         for client in self._clients.values():

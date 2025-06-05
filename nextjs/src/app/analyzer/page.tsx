@@ -90,7 +90,7 @@ export default function AnalyzerPage() {
             break;
 
           default:
-            console.warn("알 수 없는 타입 수신:", message);
+            console.warn("알 수 없는 타입 수신:", event.data);
         }
       } catch {
         console.error("잘못된 JSON 수신:", event.data);
@@ -149,7 +149,7 @@ export default function AnalyzerPage() {
 
       <div
         ref={logRef}
-        className="mt-4 p-4 bg-black text-green-400 font-mono text-sm h-75 overflow-auto whitespace-pre-wrap break-words rounded-md shadow-inner"
+        className="mt-4 p-4 bg-black text-green-400 font-mono text-sm h-96 overflow-auto whitespace-pre-wrap break-words rounded-md shadow-inner"
       >
         {progressLog.map((line, idx) => (
           <div key={idx}>{line}</div>

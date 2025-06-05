@@ -24,7 +24,10 @@ class DeblurGSSession:
         )
 
     def start_deblur_gs_task(
-        self, frames_url: str, colmap_url: str, deblur_gs_url: Optional[str]
+            self,
+            frames_url: str,
+            colmap_url: str,
+            deblur_gs_url: Optional[str] = None,
     ):
         from tasks import deblur_gs_task
 
@@ -71,7 +74,7 @@ class DeblurGSClient:
             raise LookupError(f"No session found {session_id}")
 
     async def send(self, dto: BaseWebSocketDTO):
-        print(dto.json())
+        print(f"Sending {dto.json()}")
         await self._websocket.send(dto.json())
 
 
